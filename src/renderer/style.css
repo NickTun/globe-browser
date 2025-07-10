@@ -1,0 +1,52 @@
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    background: dimgray;
+    height: 100vh;
+}
+
+.header {
+    padding-top: 6px;
+    padding-left: 85px;
+    height: 32px;
+    display: flex;
+    gap: 10px;
+    position: relative;
+}
+
+.tabs-container {
+    display: flex;
+    gap: 10px;
+}
+
+.header::after {
+    z-index: 0;
+    content: "";
+    width: 100%;
+    height: 100%;
+    app-region: drag;
+}
+
+.tab, .new-tab {
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 70px;
+    background:silver;
+    user-select: none;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    position: relative
+}
+
+.tab:hover, .new-tab:hover {
+    cursor: pointer;
+    background: whitesmoke;
+}
+
+.content {
+    flex-grow: 1;
+    background-color: silver;
+}
