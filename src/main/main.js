@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BaseWindow, WebContentsView, ipcMain, Menu } = require('electron/main');
+const { app, BaseWindow, WebContentsView, ipcMain, Menu } = require('electron/main');
 const path = require('path');
 const rootDir = path.resolve(__dirname, '..', '..');
 const { ref } = require('process');
@@ -6,7 +6,6 @@ const nativeImage = require('electron').nativeImage
 
 if (app.dock) {
   const image = nativeImage.createFromPath(path.join(rootDir, 'src', 'resources', 'icon.png'))
-  console.log(path.join(rootDir, 'src', 'resources', 'icon.png'))
   app.dock.setIcon(image);
 }
 
@@ -14,9 +13,9 @@ const Resize = (bounds, obj, offset) => {
   obj.setBounds({ x: 0, y: 0 + offset, width: bounds.width, height: bounds.height - offset })
 }
 
-const createWindow = () => {
+function createWindow() {
     const tabTopOffset = 40;
-    let activeTab = 0;
+    let activeTab = -1;
     const viewStorage = [];
 
     const win = new BaseWindow({
@@ -35,11 +34,22 @@ const createWindow = () => {
     view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
     Resize(win.getBounds(), view, 0);
 
-    const refreshTabViews = (prevActive, active) => {
-      if (viewStorage.length > active) {
-        viewStorage[prevActive].setVisible(false);
-        viewStorage[active].setVisible(true);
-      }
+    view.webContents.openDevTools({mode: 'detach'});
+
+    function refreshTabViews(prevActive, active) {
+      if(viewStorage[prevActive]) viewStorage[prevActive].setVisible(false);
+      viewStorage[active].setVisible(true);
+    }
+
+    function addNewTab(url) {
+      const webView = new WebContentsView();
+      win.contentView.addChildView(webView);
+      webView.webContents.loadURL(url);
+      webView.webContents.addListener('context-menu', () => {
+        drawMenu(webView);
+      })
+      Resize(win.getBounds(), webView, tabTopOffset);
+      viewStorage.push(webView);
     }
 
     win.on('resize', () => {
@@ -49,31 +59,48 @@ const createWindow = () => {
       Resize(win.getBounds(), view, 0);
     })
 
-    ipcMain.on('show-context-menu', (event) => {
+    function drawMenu(target) {
       const template = [
         {
           label: 'Reload',
-          click: () => { event.sender.reload(); }
+          click: () => { target.webContents.reload(); }
         },
         {
           label: 'Inspect Element',
-          click: () => { event.sender.openDevTools(); }
+          click: () => { target.webContents.openDevTools(); }
         }
       ];
       const menu = Menu.buildFromTemplate(template);
-      menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
-    });
+      menu.popup();
+    }
+
+    // ipcMain.on('show-context-menu', (event) => {
+    //   const template = [
+    //     {
+    //       label: 'Reload',
+    //       click: () => { event.sender.reload(); }
+    //     },
+    //     {
+    //       label: 'Inspect Element',
+    //       click: () => { event.sender.openDevTools(); }
+    //     }
+    //   ];
+    //   const menu = Menu.buildFromTemplate(template);
+    //   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
+    // });
 
     ipcMain.on('new-tab-view', () => {
-      const webView = new WebContentsView();
+      addNewTab('https://google.com');
+    });
 
-      win.contentView.addChildView(webView);
-      webView.webContents.loadURL('https://google.com');
-      Resize(win.getBounds(), webView, tabTopOffset);
+    ipcMain.on('select-tab-view', (e, tab_id) => {
+      refreshTabViews(activeTab, tab_id);
+      activeTab = tab_id;
+    });
 
-      viewStorage.push(webView);
-      refreshTabViews(activeTab, activeTab + 1);
-      activeTab++;
+    ipcMain.on('remove-tab-view', (e, tab_id) => {
+      viewStorage[tab_id].webContents.destroy()
+      viewStorage.splice(tab_id, 1);
     });
 }
 
@@ -81,7 +108,7 @@ app.whenReady().then(() => {
   createWindow()
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (BaseWindow.getAllWindows().length === 0) {
       createWindow()
     }
   })
