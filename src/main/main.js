@@ -37,6 +37,7 @@ function createWindow() {
     view.webContents.openDevTools({mode: 'detach'});
 
     function refreshTabViews(prevActive, active) {
+      console.log(prevActive, active)
       if(viewStorage[prevActive]) viewStorage[prevActive].setVisible(false);
       viewStorage[active].setVisible(true);
     }
@@ -100,6 +101,7 @@ function createWindow() {
 
     ipcMain.on('remove-tab-view', (e, tab_id) => {
       viewStorage[tab_id].webContents.destroy()
+      if(tab_id < activeTab) activeTab -= 1;
       viewStorage.splice(tab_id, 1);
     });
 }
