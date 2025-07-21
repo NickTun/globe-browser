@@ -14,7 +14,7 @@ const Resize = (bounds, obj, offset) => {
 }
 
 function createWindow() {
-    const tabTopOffset = 40;
+    const tabTopOffset = 70;
     let activeTab = -1;
     const viewStorage = [];
 
@@ -33,11 +33,9 @@ function createWindow() {
     win.contentView.addChildView(view);
     view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
     Resize(win.getBounds(), view, 0);
-
     view.webContents.openDevTools({mode: 'detach'});
 
     function refreshTabViews(prevActive, active) {
-      console.log(prevActive, active)
       if(viewStorage[prevActive]) viewStorage[prevActive].setVisible(false);
       viewStorage[active].setVisible(true);
     }
@@ -51,14 +49,9 @@ function createWindow() {
       })
       Resize(win.getBounds(), webView, tabTopOffset);
       viewStorage.push(webView);
-    }
 
-    win.on('resize', () => {
-      viewStorage.forEach((webView) => {
-        Resize(win.getBounds(), webView, tabTopOffset);
-      })
-      Resize(win.getBounds(), view, 0);
-    })
+      return webView;
+    }
 
     function drawMenu(target) {
       const template = [
@@ -74,6 +67,13 @@ function createWindow() {
       const menu = Menu.buildFromTemplate(template);
       menu.popup();
     }
+
+    win.on('resize', () => {
+      viewStorage.forEach((webView) => {
+        Resize(win.getBounds(), webView, tabTopOffset);
+      })
+      Resize(win.getBounds(), view, 0);
+    })
 
     // ipcMain.on('show-context-menu', (event) => {
     //   const template = [
@@ -91,7 +91,11 @@ function createWindow() {
     // });
 
     ipcMain.on('new-tab-view', () => {
-      addNewTab('https://google.com');
+      addNewTab(`file://${path.join(rootDir, 'src', 'renderer', 'pages', 'new_tab', 'index.html')}`);
+    });
+
+    ipcMain.on('load-url', (e, url) => {
+      viewStorage[activeTab].webContents.loadURL(url);
     });
 
     ipcMain.on('select-tab-view', (e, tab_id) => {

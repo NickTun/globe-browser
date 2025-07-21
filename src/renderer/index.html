@@ -15,11 +15,14 @@
   </head>
   <body>
     <div class="header">
-      <div class="tabs-container">
+      <div id="tabs-container" class="tabs-container">
 
       </div>
-      <div class="new-tab">+</div>
+      <div id="new-tab" class="new-tab" tabindex="0">+</div>
     </div>
+    <form id="url-wrapper" class="url-wrapper">
+      <input type="text" class="url" name="url" id="url" >
+    </form>
     <div class="content"></div>
     <script src="renderer.js"></script>
   </body>

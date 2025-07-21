@@ -50,3 +50,19 @@ body {
     flex-grow: 1;
     background-color: silver;
 }
+
+.url-wrapper {
+    display: flex;
+    align-items: center;
+    height: 30px;
+    background: whitesmoke;
+}
+
+.url {
+    flex-grow: 1;
+    margin: 8px;
+    border: none;
+    font-size: 18px;
+    background: darkgrey;
+    font-family: monospace;
+}

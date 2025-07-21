@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   newTabView: () => ipcRenderer.send('new-tab-view'),
   selectTabView: (data) => ipcRenderer.send('select-tab-view', data),
   removeTabView: (data) => ipcRenderer.send('remove-tab-view', data),
+  loadUrl: (data) => ipcRenderer.send('load-url', data),
 });
