@@ -7,9 +7,8 @@ body {
 }
 
 .header {
-    padding-top: 6px;
     padding-left: 85px;
-    height: 32px;
+    height: 38px;
     display: flex;
     gap: 10px;
     position: relative;
@@ -17,7 +16,6 @@ body {
 
 .tabs-container {
     display: flex;
-    gap: 10px;
 }
 
 .header::after {
@@ -26,6 +24,13 @@ body {
     width: 100%;
     height: 100%;
     app-region: drag;
+}
+
+.tab-wrapper {
+    display: flex; 
+    justify-content: end;
+    padding-top: 6px;
+    position: relative;
 }
 
 .tab, .new-tab {
@@ -39,6 +44,19 @@ body {
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
     position: relative
+}
+
+.dragover {
+    padding-left: 70px;
+    margin-right: 35px;
+}
+
+.dragover > .tab {
+    margin-right: -35px;
+}
+
+.no-events {
+    pointer-events: none;
 }
 
 .tab:hover, .new-tab:hover {

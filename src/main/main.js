@@ -1,8 +1,9 @@
 const { app, BaseWindow, WebContentsView, ipcMain, Menu } = require('electron/main');
 const path = require('path');
 const rootDir = path.resolve(__dirname, '..', '..');
-const { ref } = require('process');
 const nativeImage = require('electron').nativeImage
+
+const TAB_TOP_OFFSET = 70;
 
 if (app.dock) {
   const image = nativeImage.createFromPath(path.join(rootDir, 'src', 'resources', 'icon.png'))
@@ -13,110 +14,113 @@ const Resize = (bounds, obj, offset) => {
   obj.setBounds({ x: 0, y: 0 + offset, width: bounds.width, height: bounds.height - offset })
 }
 
-function createWindow() {
-    const tabTopOffset = 70;
-    let activeTab = -1;
-    const viewStorage = [];
+const winStorage = [];
 
-    const win = new BaseWindow({
+class Window {
+  constructor() {
+    this.id = winStorage.length;
+    this.activeTab = 0;
+    this.viewStorage = [];
+
+    this.win = new BaseWindow({
         titleBarStyle: 'hiddenInset',
         ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
         icon: path.join(rootDir, 'src', 'resources', 'icon.icns'),
     })
 
-    const view = new WebContentsView({
+    this.view = new WebContentsView({
       webPreferences: {
         preload: path.join(rootDir, 'src', 'preload', 'preload.js')
       }
     })
 
-    win.contentView.addChildView(view);
-    view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
-    Resize(win.getBounds(), view, 0);
-    view.webContents.openDevTools({mode: 'detach'});
+    this.win.contentView.addChildView(this.view);
+    this.view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
+    Resize(this.win.getBounds(), this.view, 0);
+    this.view.webContents.openDevTools({mode: 'detach'});
 
-    function refreshTabViews(prevActive, active) {
-      if(viewStorage[prevActive]) viewStorage[prevActive].setVisible(false);
-      viewStorage[active].setVisible(true);
-    }
-
-    function addNewTab(url) {
-      const webView = new WebContentsView();
-      win.contentView.addChildView(webView);
-      webView.webContents.loadURL(url);
-      webView.webContents.addListener('context-menu', () => {
-        drawMenu(webView);
+    this.win.on('resize', () => {
+      this.viewStorage.forEach((webView) => {
+        Resize(this.win.getBounds(), webView, TAB_TOP_OFFSET);
       })
-      Resize(win.getBounds(), webView, tabTopOffset);
-      viewStorage.push(webView);
+      Resize(this.win.getBounds(), this.view, 0);
+    });
 
-      return webView;
-    }
-
-    function drawMenu(target) {
-      const template = [
-        {
-          label: 'Reload',
-          click: () => { target.webContents.reload(); }
-        },
-        {
-          label: 'Inspect Element',
-          click: () => { target.webContents.openDevTools(); }
-        }
-      ];
-      const menu = Menu.buildFromTemplate(template);
-      menu.popup();
-    }
-
-    win.on('resize', () => {
-      viewStorage.forEach((webView) => {
-        Resize(win.getBounds(), webView, tabTopOffset);
-      })
-      Resize(win.getBounds(), view, 0);
+    this.view.webContents.on('did-finish-load', () => {
+      this.view.webContents.send('aquire-id', this.id);
     })
+  }
 
-    // ipcMain.on('show-context-menu', (event) => {
-    //   const template = [
-    //     {
-    //       label: 'Reload',
-    //       click: () => { event.sender.reload(); }
-    //     },
-    //     {
-    //       label: 'Inspect Element',
-    //       click: () => { event.sender.openDevTools(); }
-    //     }
-    //   ];
-    //   const menu = Menu.buildFromTemplate(template);
-    //   menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
-    // });
+  refreshTabViews(prevActive, active) {
+    if(this.viewStorage[prevActive]) this.viewStorage[prevActive].setVisible(false);
+    this.viewStorage[active].setVisible(true);
+  }
 
-    ipcMain.on('new-tab-view', () => {
-      addNewTab(`file://${path.join(rootDir, 'src', 'renderer', 'pages', 'new_tab', 'index.html')}`);
-    });
+  addNewTab() {
+    const webView = new WebContentsView();
+    this.win.contentView.addChildView(webView);
+    webView.webContents.addListener('context-menu', () => {
+      drawMenu(webView);
+    })
+    Resize(this.win.getBounds(), webView, TAB_TOP_OFFSET);
+    this.viewStorage.push(webView);
 
-    ipcMain.on('load-url', (e, url) => {
-      viewStorage[activeTab].webContents.loadURL(url);
-    });
+    return this.viewStorage.length - 1;
+  }
 
-    ipcMain.on('select-tab-view', (e, tab_id) => {
-      refreshTabViews(activeTab, tab_id);
-      activeTab = tab_id;
-    });
+  drawMenu(target) {
+    const template = [
+      {
+        label: 'Reload',
+        click: () => { target.webContents.reload(); }
+      },
+      {
+        label: 'Inspect Element',
+        click: () => { target.webContents.openDevTools(); }
+      }
+    ];
+    const menu = Menu.buildFromTemplate(template);
+    menu.popup();
+  }
 
-    ipcMain.on('remove-tab-view', (e, tab_id) => {
-      viewStorage[tab_id].webContents.destroy()
-      if(tab_id < activeTab) activeTab -= 1;
-      viewStorage.splice(tab_id, 1);
-    });
+  loadViewURL(url, tab_id) {
+    this.viewStorage[tab_id].webContents.loadURL(url);
+  }
+
+  selectTabView(tab_id) {
+    this.refreshTabViews(this.activeTab, tab_id);
+    this.activeTab = tab_id;
+  }
+
+  removeTabView(tab_id) {
+    this.viewStorage[tab_id].webContents.destroy()
+    if(tab_id < this.activeTab) this.activeTab -= 1;
+    this.viewStorage.splice(tab_id, 1);
+  }
 }
 
 app.whenReady().then(() => {
-  createWindow()
+  winStorage.push(new Window);
+
+  ipcMain.on('new-tab-view', (e, url, id) => {
+    const urlString = url != "" ? url : `file://${path.join(rootDir, 'src', 'renderer', 'pages', 'new_tab', 'index.html')}`;
+    winStorage[id].loadViewURL(urlString, winStorage[id].addNewTab());
+  });
+
+  ipcMain.on('load-url', (e, url, tab_id, id) => {
+    winStorage[id].loadViewURL(url, tab_id);
+  });
+
+  ipcMain.on('select-tab-view', (e, tab_id, id) => {
+    winStorage[id].selectTabView(tab_id)
+  });
+
+  ipcMain.on('remove-tab-view', (e, tab_id, id) => {
+    winStorage[id].removeTabView(tab_id)
+  });
 
   app.on('activate', () => {
-    if (BaseWindow.getAllWindows().length === 0) {
-      createWindow()
-    }
+    winStorage.push(new Window);
   })
 })
 
