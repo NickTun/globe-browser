@@ -56,9 +56,9 @@ class Window {
         this.Resize(this.win.getBounds(), webView, TAB_TOP_OFFSET);
         this.viewStorage.push(webView);
 
-        // webView.webContents.on('page-title-updated', () => {
-        //     this.view.webContents.send('aquire-tab-title', webView.webContents.getTitle());
-        // })
+        webView.webContents.on('page-title-updated', () => {
+            this.view.webContents.send('aquire-tab-title', webView.webContents.getTitle());
+        })
 
         return this.viewStorage.length - 1;
     }
