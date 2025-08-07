@@ -1,4 +1,4 @@
-const { app, BaseWindow, WebContentsView, ipcMain, Menu } = require('electron/main');
+const { app, BaseWindow, WebContentsView, ipcMain, Menu, session } = require('electron/main');
 const path = require('path');
 const rootDir = path.resolve(__dirname, '..', '..');
 const nativeImage = require('electron').nativeImage
@@ -122,6 +122,11 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     winStorage.push(new Window);
   })
+
+  // session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+  //   details.requestHeaders['User-Agent'] = 'Globe/0.0';
+  //   callback({ cancel: false, requestHeaders: details.requestHeaders });
+  // });
 })
 
 app.on('window-all-closed', () => {

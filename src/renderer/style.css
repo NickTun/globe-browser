@@ -1,3 +1,7 @@
+:root {
+    --events: all;
+}
+
 body {
     display: flex;
     flex-direction: column;
@@ -43,7 +47,8 @@ body {
     user-select: none;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
-    position: relative
+    position: relative;
+    pointer-events: var(--events);
 }
 
 .dragover {
@@ -83,4 +88,8 @@ body {
     font-size: 18px;
     background: darkgrey;
     font-family: monospace;
+}
+
+.hidden {
+    display: none;
 }

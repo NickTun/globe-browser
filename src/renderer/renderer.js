@@ -2,6 +2,7 @@ const tabStorage = document.getElementById('tabs-container');
 let activeTabs = [];
 let openTab = null;
 let windowId = null;
+const root = document.querySelector(':root');
 
 window.electronAPI.onAquireId((id) => {
     if(!windowId) windowId = id;
@@ -30,7 +31,7 @@ urlWrapper.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const formData = new FormData(e.target);
-    window.electronAPI.loadUrl(formData.get('url'), openTab.id, windowId);
+    window.electronAPI.loadUrl(formData.get('url'), activeTabs.indexOf(openTab), windowId);
 });
 
 url.addEventListener('input', (e) => {
@@ -49,7 +50,12 @@ window.addEventListener('dragover', (e) => {
     e.preventDefault();
 });
 
-function createTab(title="New Tab", url_str="", selection=[0, 0], focus=false, active=false, id=null) {
+tabStorage.addEventListener('dragover', (e) => {
+    root.style.setProperty('--events', 'none');
+    e.preventDefault();
+});
+
+function createTab(title="New Tab", url_str="", selection=[0, 0], focus=false, active=false) {
     const tabWrapper = document.createElement('div');
     const tab = document.createElement('div');
     const close = document.createElement('button');
@@ -66,7 +72,6 @@ function createTab(title="New Tab", url_str="", selection=[0, 0], focus=false, a
     tab.dataset.title = title;
     if(focus) tab.dataset.focus = true;
     if(active) tab.dataset.active = true;
-    if(id) tab.id = id;
     tabWrapper.draggable = true;
 
     tab.addEventListener('click', (e) => {
@@ -91,55 +96,69 @@ function createTab(title="New Tab", url_str="", selection=[0, 0], focus=false, a
         }
     });
 
-    // tabWrapper.addEventListener('dragstart', (e) => {
-    //     const tab = e.currentTarget.childNodes[0];
-    //     const data = {
-    //         title: tab.dataset.title,
-    //         url: tab.dataset.url,
-    //         selection: tab.hasAttribute('data-selection') ? tab.dataset.selection : null,
-    //         focus: tab.hasAttribute('data-focus') ? tab.dataset.focus : null,
-    //         active: tab.hasAttribute('data-active') ? tab.dataset.active : null,
-    //         id: tab.hasAttribute('id') ? tab.id : null,
-    //     }
+    tabWrapper.addEventListener('dragstart', (e) => {
+        root.style.setProperty('--events', 'none');
+        e.dataTransfer.effectAllowed = "move";
+        const tab = e.currentTarget.childNodes[0];
+        const data = {
+            title: tab.dataset.title,
+            url: tab.dataset.url,
+            selection: tab.hasAttribute('data-selection') ? tab.dataset.selection : null,
+            focus: tab.hasAttribute('data-focus') ? tab.dataset.focus : null,
+            active: tab.hasAttribute('data-active') ? tab.dataset.active : null,
+            windowId: windowId
+        }
 
-    //     e.dataTransfer.setData('json', JSON.stringify(data));
-    //     e.stopPropagation();
-    // }, true);
+        e.dataTransfer.setData('json', JSON.stringify(data));
+        e.stopPropagation();
 
-    // tabWrapper.addEventListener('drop', (e) => {
-    //     if(e.currentTarget == e.target) {
-    //         e.currentTarget.childNodes[0].classList.remove('no-events');
-    //         e.currentTarget.classList.remove('dragover');
-    //         console.log(e.currentTarget, 'drop')
-    //         const data = JSON.parse(e.dataTransfer.getData('json'));
-    //         const tabWrapper = createTab(data.title, data.url, data.selection, data.focus, data.active, data.id);
-    //         tabStorage.insertBefore(tabWrapper, e.currentTarget);
-            
-    //     }
-    //     e.stopPropagation();
-    // }, true);
+        tabWrapper.addEventListener('drag', (e) => {
+            e.target.classList.add('hidden');
+        }, { once:true });
+    }, true);
 
-    // tabWrapper.addEventListener('dragenter', (e) => {
-    //     e.currentTarget.childNodes[0].classList.add('no-events');
-    //     if(e.currentTarget == e.target) {
-    //         e.currentTarget.classList.add('dragover');
-    //     }
+    tabWrapper.addEventListener('drop', (e) => {
+        if(e.currentTarget == e.target) {
+            e.currentTarget.classList.remove('dragover');
+            const data = JSON.parse(e.dataTransfer.getData('json'));
+            let tabWrapper = null;
+            if(data.windowId == windowId) {
+                tabWrapper = document.querySelector('.hidden');
+            } else {
+                tabWrapper = createTab(data.title, data.url, data.selection, data.focus);
+                selectTab(tabWrapper);
+                // window.electronAPI.loadUrl(data.url,tabWrapper.childNodes[0].id , windowId);
+            }
+            tabStorage.insertBefore(tabWrapper, e.currentTarget);
+        }
+        root.style.setProperty('--events', 'all');
+        e.stopPropagation();
+    }, true);
+
+    tabWrapper.addEventListener('dragenter', (e) => {
+        if(e.currentTarget == e.target) {
+            e.currentTarget.classList.add('dragover');
+        }
         
-    //     e.stopPropagation();
-    // }, true);
+        e.stopPropagation();
+    }, true);
 
-    // tabWrapper.addEventListener('dragleave', (e) => {
-    //     if(e.currentTarget == e.target) {
-    //         e.currentTarget.childNodes[0].classList.remove('no-events');
-    //         e.currentTarget.classList.remove('dragover');
-    //     }
+    tabWrapper.addEventListener('dragleave', (e) => {
+        if(e.currentTarget == e.target) {
+            e.currentTarget.classList.remove('dragover');
+        }
         
-    //     e.stopPropagation();
-    // }, true);
+        e.stopPropagation();
+    }, true);
 
-    // tab.addEventListener('dragend', (e) => {
-    //     console.log("dropped");
-    // });
+    tabWrapper.addEventListener('dragend', (e) => {
+        if(document.elementFromPoint(e.clientX, e.clientY) == null) {
+            closeTab(e.target);
+        } else {
+            e.target.classList.remove('hidden');
+        }
+        root.style.setProperty('--events', 'all');
+    });
 
     return tabWrapper;
 }
@@ -155,9 +174,9 @@ function selectTab(tabWrapper) {
         activeTabs.push(tab);
         tab.dataset.active = true;
         window.electronAPI.newTabView(tab.dataset.url, windowId);
-        tab.id = activeTabs.length - 1;
+        // tab.id = activeTabs.length - 1;
     }
-    window.electronAPI.selectTabView(tab.id, windowId);
+    window.electronAPI.selectTabView(activeTabs.indexOf(tabWrapper.childNodes[0]), windowId);
 
     const range = tab.dataset.selection.split(",");
     const focus = tab.hasAttribute('data-focus');
@@ -173,14 +192,11 @@ function selectTab(tabWrapper) {
 
 function unloadTab(tabWrapper) {
     const tab = tabWrapper.childNodes[0];
+    const index = activeTabs.indexOf(tabWrapper.childNodes[0]);
     tab.removeAttribute('data-active');
-    for (let i = Number(tab.id)+1; i <= activeTabs.length-1; i++) {
-        activeTabs[i].id -= 1;
-    }
 
-    activeTabs.splice(tab.id, 1);
-    window.electronAPI.removeTabView(tab.id, windowId);
-    tab.removeAttribute('id');
+    activeTabs.splice(index, 1);
+    window.electronAPI.removeTabView(index, windowId);
 }
 
 function closeTab(tabWrapper) {
