@@ -67,6 +67,15 @@ export function createTab(title_str="New Tab", url_str="", selection=[0, 0], foc
         tabWrapper.addEventListener('drag', (e) => {
             e.target.classList.add('hidden');
         }, { once:true });
+
+        tabWrapper.addEventListener('dragend', (e) => {
+            if(document.elementFromPoint(e.clientX, e.clientY) == null) {
+                closeTab(e.target);
+            } else {
+                e.target.classList.remove('hidden');
+            }
+            root.style.setProperty('--events', 'all');
+        }, { once: true });
     }, true);
 
     tabWrapper.addEventListener('drop', (e) => {
@@ -92,24 +101,15 @@ export function createTab(title_str="New Tab", url_str="", selection=[0, 0], foc
         }
         
         e.stopPropagation();
-    }, true);
 
-    tabWrapper.addEventListener('dragleave', (e) => {
-        if(e.currentTarget == e.target) {
-            e.currentTarget.classList.remove('dragover');
-        }
-        
-        e.stopPropagation();
+        tabWrapper.addEventListener('dragleave', (e) => {
+            if(e.currentTarget == e.target) {
+                e.currentTarget.classList.remove('dragover');
+            }
+            
+            e.stopPropagation();
+        }, { capture: true, once: true });
     }, true);
-
-    tabWrapper.addEventListener('dragend', (e) => {
-        if(document.elementFromPoint(e.clientX, e.clientY) == null) {
-            closeTab(e.target);
-        } else {
-            e.target.classList.remove('hidden');
-        }
-        root.style.setProperty('--events', 'all');
-    });
 
     return tabWrapper;
 }

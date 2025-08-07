@@ -31,6 +31,10 @@ app.whenReady().then(() => {
     winStorage[id].removeTabView(tab_id)
   });
 
+  ipcMain.on('close-window', (e, id) => {
+    winStorage[id].closeWindow();
+  });
+
   app.on('activate', () => {
     winStorage.push(new Window(winStorage.length));
   })

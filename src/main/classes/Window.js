@@ -88,9 +88,16 @@ class Window {
     }
 
     removeTabView(tab_id) {
-        this.viewStorage[tab_id].webContents.destroy()
+        this.viewStorage[tab_id].webContents.close();
         if(tab_id < this.activeTab) this.activeTab -= 1;
         this.viewStorage.splice(tab_id, 1);
+    }
+
+    closeWindow() {
+        this.viewStorage.forEach((webView) => {
+            webView.webContents.close();
+        });
+        this.win.close();
     }
 }
 
