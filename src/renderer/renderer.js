@@ -11,6 +11,10 @@ window.electronAPI.onAquireId((id) => {
     selectTab(addTab());
 });
 
+window.electronAPI.onAquireTabTitle((title) => {
+    openTab.childNodes[0].innerHTML = title;
+});
+
 const newTab = document.getElementById('new-tab');
 newTab.addEventListener('click', () => {
     selectTab(addTab());

@@ -5,42 +5,44 @@ import { selectTab } from './selectTab.js';
 import { closeTab } from './closeTab.js';
 import { unloadTab } from './unloadTab.js';
 
-export function createTab(title="New Tab", url_str="", selection=[0, 0], focus=false, active=false) {
+export function createTab(title_str="New Tab", url_str="", selection=[0, 0], focus=false, active=false) {
     const tabWrapper = document.createElement('div');
     const tab = document.createElement('div');
     const close = document.createElement('button');
     const unload = document.createElement('button');
+    const title = document.createElement('h4');
     close.innerHTML = "x";
     unload.innerHTML = "u";
     tab.classList.add('tab');
     tabWrapper.appendChild(tab);
     tabWrapper.classList.add('tab-wrapper');
+    tab.appendChild(title);
     tab.appendChild(close);
     tab.appendChild(unload);
     tab.dataset.url = url_str;
     tab.dataset.selection = selection;
-    tab.dataset.title = title;
+    title.innerHTML = title_str
     if(focus) tab.dataset.focus = true;
     if(active) tab.dataset.active = true;
     tabWrapper.draggable = true;
 
-    tab.addEventListener('click', (e) => {
-        selectTab(e.target.parentElement)
+    tab.addEventListener('click', function (e) {
+        selectTab(this.parentElement);
     });
 
     close.addEventListener('click', (e) => {
         closeTab(e.target.parentElement.parentElement);
         e.stopPropagation();
-    }, { capture: true });
+    }, true);
 
     unload.addEventListener('click', (e) => {
         unloadTab(e.target.parentElement.parentElement);
         e.stopPropagation();
-    }, { capture: true });
+    }, true);
 
     tab.addEventListener('mousedown', (e) => {
         if(url === document.activeElement) {
-        openTab.dataset.focus = true;
+            openTab.dataset.focus = true;
         } else {
             openTab.removeAttribute('data-focus');
         }
@@ -51,7 +53,7 @@ export function createTab(title="New Tab", url_str="", selection=[0, 0], focus=f
         e.dataTransfer.effectAllowed = "move";
         const tab = e.currentTarget.childNodes[0];
         const data = {
-            title: tab.dataset.title,
+            title: tab.childNodes[0].innerHTML,
             url: tab.dataset.url,
             selection: tab.hasAttribute('data-selection') ? tab.dataset.selection : null,
             focus: tab.hasAttribute('data-focus') ? tab.dataset.focus : null,
@@ -77,7 +79,6 @@ export function createTab(title="New Tab", url_str="", selection=[0, 0], focus=f
             } else {
                 tabWrapper = createTab(data.title, data.url, data.selection, data.focus);
                 if(data.active) selectTab(tabWrapper);
-                // window.electronAPI.loadUrl(data.url,tabWrapper.childNodes[0].id , windowId);
             }
             tabStorage.insertBefore(tabWrapper, e.currentTarget);
         }
