@@ -6,9 +6,9 @@ import { addTab } from './functions/addTab.js';
 import { selectTab } from './functions/selectTab.js';
 window.windowId = null;
 
-window.electronAPI.onAquireId((id) => {
+window.electronAPI.onAquireId((id, url) => {
     if(!window.windowId) window.windowId = id;
-    selectTab(addTab());
+    selectTab(addTab(url));
 });
 
 window.electronAPI.onAquireTabTitle((title) => {
@@ -56,7 +56,21 @@ window.addEventListener('dragover', (e) => {
     e.preventDefault();
 });
 
-tabStorage.addEventListener('dragover', (e) => {
-    root.style.setProperty('--events', 'none');
+tabStorage.addEventListener('dragenter', (e) => {
+    const check = e.relatedTarget?.classList.contains('outside')
+    if(check == undefined || check) {
+        window.electronAPI.setDraggedWindowStatus(window.windowId);
+        root.style.setProperty('--events', 'none');
+    }
+    
     e.preventDefault();
-});
+}, true);
+
+tabStorage.addEventListener('dragleave', (e) => {
+    const check = e.relatedTarget?.classList.contains('outside')
+    if(check == undefined || check) {
+        window.electronAPI.setDraggedWindowStatus(-1);
+    }
+    
+    e.preventDefault();
+}, true);

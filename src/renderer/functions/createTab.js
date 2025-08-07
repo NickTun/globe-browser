@@ -5,7 +5,7 @@ import { selectTab } from './selectTab.js';
 import { closeTab } from './closeTab.js';
 import { unloadTab } from './unloadTab.js';
 
-export function createTab(title_str="New Tab", url_str="", selection=[0, 0], focus=false, active=false) {
+export function createTab(url_str="", title_str="New Tab", selection=[0, 0], focus=false, active=false) {
     const tabWrapper = document.createElement('div');
     const tab = document.createElement('div');
     const close = document.createElement('button');
@@ -68,11 +68,15 @@ export function createTab(title_str="New Tab", url_str="", selection=[0, 0], foc
             e.target.classList.add('hidden');
         }, { once:true });
 
-        tabWrapper.addEventListener('dragend', (e) => {
-            if(document.elementFromPoint(e.clientX, e.clientY) == null) {
+        tabWrapper.addEventListener('dragend', async (e) => {
+            const outside = await window.electronAPI.getDraggedWindowStatus();
+            if(outside == window.windowId) {
+                e.target.classList.remove('hidden');
+            } else if (outside == -1) {
+                window.electronAPI.createWindow(data);
                 closeTab(e.target);
             } else {
-                e.target.classList.remove('hidden');
+                closeTab(e.target);
             }
             root.style.setProperty('--events', 'all');
         }, { once: true });
@@ -86,7 +90,7 @@ export function createTab(title_str="New Tab", url_str="", selection=[0, 0], foc
             if(data.windowId == windowId) {
                 tabWrapper = document.querySelector('.hidden');
             } else {
-                tabWrapper = createTab(data.title, data.url, data.selection, data.focus);
+                tabWrapper = createTab(data.url, data.title, data.selection, data.focus);
                 if(data.active) selectTab(tabWrapper);
             }
             tabStorage.insertBefore(tabWrapper, e.currentTarget);

@@ -10,6 +10,11 @@ if (app.dock) {
 }
 
 const winStorage = [];
+let draggedWindowStatus = -1;
+
+async function getDraggedWindowStatus() {
+  return draggedWindowStatus;
+}
 
 app.whenReady().then(() => {
   winStorage.push(new Window(winStorage.length));
@@ -33,6 +38,16 @@ app.whenReady().then(() => {
 
   ipcMain.on('close-window', (e, id) => {
     winStorage[id].closeWindow();
+  });
+
+  ipcMain.on('create-window', (e, data) => {
+    winStorage.push(new Window(winStorage.length, data.url));
+  });
+
+  ipcMain.handle('get-dragged-window-status', getDraggedWindowStatus);
+
+  ipcMain.on('set-dragged-window-status', (e, id) => {
+    draggedWindowStatus = id;
   });
 
   app.on('activate', () => {

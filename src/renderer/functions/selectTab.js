@@ -3,6 +3,7 @@ import { setOpenTab } from "../variables/openTab.js";
 
 export function selectTab(tabWrapper) {
     const tab = tabWrapper.childNodes[0];
+    const url = document.getElementById('url');
     if(!tab.hasAttribute('data-active')) {
         pushTab(tab);
         tab.dataset.active = true;

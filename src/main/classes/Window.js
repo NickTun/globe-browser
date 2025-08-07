@@ -4,7 +4,7 @@ const rootDir = path.resolve(__dirname, '..', '..', '..');
 
 const TAB_TOP_OFFSET = 70;
 class Window {
-    constructor(id) {
+    constructor(id, url="") {
         this.id = id;
         this.activeTab = 0;
         this.viewStorage = [];
@@ -24,7 +24,7 @@ class Window {
         this.win.contentView.addChildView(this.view);
         this.view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
         this.Resize(this.win.getBounds(), this.view, 0);
-        this.view.webContents.openDevTools({mode: 'detach'});
+        // this.view.webContents.openDevTools({mode: 'detach'});
 
         this.win.on('resize', () => {
             this.viewStorage.forEach((webView) => {
@@ -34,7 +34,7 @@ class Window {
         });
 
         this.view.webContents.on('did-finish-load', () => {
-            this.view.webContents.send('aquire-id', this.id);
+            this.view.webContents.send('aquire-id', this.id, url);
         })
     }
 
