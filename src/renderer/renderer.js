@@ -70,6 +70,7 @@ tabStorage.addEventListener('dragleave', (e) => {
     const check = e.relatedTarget?.classList.contains('outside')
     if(check == undefined || check) {
         window.electronAPI.setDraggedWindowStatus(-1);
+        root.style.setProperty('--events', 'all');
     }
     
     e.preventDefault();
