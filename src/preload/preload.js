@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createWindow: (data) => ipcRenderer.send('create-window', data),
   getDraggedWindowStatus: () => ipcRenderer.invoke('get-dragged-window-status'),
   setDraggedWindowStatus: (id) => ipcRenderer.send('set-dragged-window-status', id),
+  exchangeViews: (tab_id, id_from, id_to) => ipcRenderer.send('exchange-views', tab_id, id_from, id_to)
 });

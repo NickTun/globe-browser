@@ -44,6 +44,11 @@ app.whenReady().then(() => {
     winStorage.push(new Window(winStorage.length, data.url));
   });
 
+  ipcMain.on('exchange-views', (e, tab_id, id_from, id_to) => {
+    const tab = winStorage[id_from].getTab(tab_id);
+    winStorage[id_to].pushTab(tab);
+  })
+
   ipcMain.handle('get-dragged-window-status', getDraggedWindowStatus);
 
   ipcMain.on('set-dragged-window-status', (e, id) => {

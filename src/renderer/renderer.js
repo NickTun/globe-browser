@@ -93,6 +93,7 @@ tabStorage.addEventListener('drop', function (e) {
     if(data.windowId == windowId) {
         selectedTab = document.querySelector('.hidden');
     } else {
+        // window.electronAPI.exchangeViews(data.tab_id, data.windowId, window.windowId);
         selectedTab = createTab(data.url, data.title, data.selection, data.focus);
         if(data.active) selectTab(selectedTab);
     }

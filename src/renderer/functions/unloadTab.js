@@ -1,7 +1,6 @@
 import { spliceTab, activeTabs } from "../variables/activeTabs.js";
 
-export function unloadTab(tabWrapper) {
-    const tab = tabWrapper.childNodes[0];
+export function unloadTab(tab) {
     const index = activeTabs.indexOf(tab);
     tab.removeAttribute('data-active');
 

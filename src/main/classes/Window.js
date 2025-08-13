@@ -85,6 +85,8 @@ class Window {
     selectTabView(tab_id) {
         this.refreshTabViews(this.activeTab, tab_id);
         this.activeTab = tab_id;
+
+        console.log(this.viewStorage, this.activeTab)
     }
 
     removeTabView(tab_id) {
@@ -98,6 +100,21 @@ class Window {
             webView.webContents.close();
         });
         this.win.close();
+    }
+
+    getTab(tab_id) {
+        const tab = this.viewStorage[tab_id];
+        this.viewStorage.splice(tab_id, 1);
+        this.win.contentView.removeChildView(tab);
+        return tab;
+    }
+
+    pushTab(tab) {
+        this.win.contentView.addChildView(tab);
+        this.Resize(this.win.getBounds(), tab, TAB_TOP_OFFSET);
+        this.viewStorage.push(tab);
+        this.selectTabView(this.viewStorage.length - 1);
+        console.log(this.viewStorage, this.activeTab)
     }
 }
 

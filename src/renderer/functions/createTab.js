@@ -1,13 +1,13 @@
 const tabStorage = document.getElementById('tabs-container');
 const root = document.querySelector(':root');
 const tabSplitter = document.getElementById('tab-splitter');
+import { activeTabs } from "../variables/activeTabs.js";
 import { openTab } from '../variables/openTab.js';
 import { selectTab } from './selectTab.js';
 import { closeTab } from './closeTab.js';
 import { unloadTab } from './unloadTab.js';
 
 export function createTab(url_str="", title_str="New Tab", selection=[0, 0], focus=false, active=false) {
-    const tabWrapper = document.createElement('div');
     const tab = document.createElement('div');
     const close = document.createElement('button');
     const unload = document.createElement('button');
@@ -15,8 +15,6 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
     close.innerHTML = "x";
     unload.innerHTML = "u";
     tab.classList.add('tab');
-    tabWrapper.appendChild(tab);
-    tabWrapper.classList.add('tab-wrapper');
     tab.appendChild(title);
     tab.appendChild(close);
     tab.appendChild(unload);
@@ -25,7 +23,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
     title.innerHTML = title_str
     if(focus) tab.dataset.focus = true;
     if(active) tab.dataset.active = true;
-    tabWrapper.draggable = true;
+    tab.draggable = true;
 
     tab.addEventListener('click', function (e) {
         selectTab(this.parentElement);
@@ -49,17 +47,17 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         }
     });
 
-    tabWrapper.addEventListener('dragstart', function (e) {
+    tab.addEventListener('dragstart', function (e) {
         e.dataTransfer.effectAllowed = "move";
         e.target.classList.add('dragged');
-        const tab = e.currentTarget.childNodes[0];
         const data = {
-            title: tab.childNodes[0].innerHTML,
-            url: tab.dataset.url,
-            selection: tab.hasAttribute('data-selection') ? tab.dataset.selection : null,
-            focus: tab.hasAttribute('data-focus') ? tab.dataset.focus : null,
-            active: tab.hasAttribute('data-active') ? tab.dataset.active : null,
-            windowId: window.windowId
+            title: this.childNodes[0].innerHTML,
+            url: this.dataset.url,
+            selection: this.hasAttribute('data-selection') ? this.dataset.selection : null,
+            focus: this.hasAttribute('data-focus') ? this.dataset.focus : null,
+            active: this.hasAttribute('data-active') ? this.dataset.active : null,
+            windowId: window.windowId,
+            tab_id: activeTabs.indexOf(this)
         }
 
         e.dataTransfer.setData('json', JSON.stringify(data));
@@ -71,7 +69,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
             tabStorage.appendChild(e.target);
         }, { once:true });
 
-        tabWrapper.addEventListener('dragend', async (e) => {
+        tab.addEventListener('dragend', async (e) => {
             e.target.classList.remove('dragged');
             tabSplitter.classList.remove('tab-splitter-open');
             const outside = await window.electronAPI.getDraggedWindowStatus();
@@ -86,5 +84,5 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         }, { once: true });
     }, true);
 
-    return tabWrapper;
+    return tab;
 }
