@@ -1,9 +1,11 @@
 const tabStorage = document.getElementById('tabs-container');
+const tabSplitter = document.getElementById('tab-splitter');
 const root = document.querySelector(':root');
 import { activeTabs } from './variables/activeTabs.js';
 import { openTab } from './variables/openTab.js';
 import { addTab } from './functions/addTab.js';
 import { selectTab } from './functions/selectTab.js';
+import { createTab } from './functions/createTab.js';
 window.windowId = null;
 
 window.electronAPI.onAquireId((id, url) => {
@@ -60,18 +62,41 @@ tabStorage.addEventListener('dragenter', (e) => {
     const check = e.relatedTarget?.classList.contains('outside')
     if(check == undefined || check) {
         window.electronAPI.setDraggedWindowStatus(window.windowId);
-        root.style.setProperty('--events', 'none');
+        tabSplitter.classList.add('tab-splitter-open');
+        // root.style.setProperty('--events', 'none');
     }
     
     e.preventDefault();
 }, true);
 
+tabStorage.addEventListener('dragover', function (e) {
+    this.removeChild(tabSplitter);
+    const offset = Math.floor((e.clientX-this.getBoundingClientRect().x)/120);
+    this.insertBefore(tabSplitter, this.children[offset]);
+    this.dataset.offset = offset;
+});
+
 tabStorage.addEventListener('dragleave', (e) => {
     const check = e.relatedTarget?.classList.contains('outside')
     if(check == undefined || check) {
         window.electronAPI.setDraggedWindowStatus(-1);
-        root.style.setProperty('--events', 'all');
+        tabSplitter.classList.remove('tab-splitter-open');
+        // root.style.setProperty('--events', 'all');
     }
     
     e.preventDefault();
+}, true);
+
+tabStorage.addEventListener('drop', function (e) {
+    const data = JSON.parse(e.dataTransfer.getData('json'));
+    let selectedTab = null;
+    if(data.windowId == windowId) {
+        selectedTab = document.querySelector('.hidden');
+    } else {
+        selectedTab = createTab(data.url, data.title, data.selection, data.focus);
+        if(data.active) selectTab(selectedTab);
+    }
+    this.insertBefore(selectedTab, tabSplitter);
+    tabSplitter.classList.remove('tab-splitter-open');
+    e.stopPropagation();
 }, true);

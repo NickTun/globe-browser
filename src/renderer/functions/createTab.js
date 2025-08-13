@@ -1,5 +1,6 @@
 const tabStorage = document.getElementById('tabs-container');
 const root = document.querySelector(':root');
+const tabSplitter = document.getElementById('tab-splitter');
 import { openTab } from '../variables/openTab.js';
 import { selectTab } from './selectTab.js';
 import { closeTab } from './closeTab.js';
@@ -48,9 +49,9 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         }
     });
 
-    tabWrapper.addEventListener('dragstart', (e) => {
-        root.style.setProperty('--events', 'none');
+    tabWrapper.addEventListener('dragstart', function (e) {
         e.dataTransfer.effectAllowed = "move";
+        e.target.classList.add('dragged');
         const tab = e.currentTarget.childNodes[0];
         const data = {
             title: tab.childNodes[0].innerHTML,
@@ -64,11 +65,15 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         e.dataTransfer.setData('json', JSON.stringify(data));
         e.stopPropagation();
 
-        tabWrapper.addEventListener('drag', (e) => {
+        this.addEventListener('drag', (e) => {
             e.target.classList.add('hidden');
+            tabStorage.removeChild(e.target);
+            tabStorage.appendChild(e.target);
         }, { once:true });
 
         tabWrapper.addEventListener('dragend', async (e) => {
+            e.target.classList.remove('dragged');
+            tabSplitter.classList.remove('tab-splitter-open');
             const outside = await window.electronAPI.getDraggedWindowStatus();
             if(outside == window.windowId) {
                 e.target.classList.remove('hidden');
@@ -78,41 +83,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
             } else {
                 closeTab(e.target);
             }
-            root.style.setProperty('--events', 'all');
         }, { once: true });
-    }, true);
-
-    tabWrapper.addEventListener('drop', (e) => {
-        if(e.currentTarget == e.target) {
-            e.currentTarget.classList.remove('dragover');
-            const data = JSON.parse(e.dataTransfer.getData('json'));
-            let tabWrapper = null;
-            if(data.windowId == windowId) {
-                tabWrapper = document.querySelector('.hidden');
-            } else {
-                tabWrapper = createTab(data.url, data.title, data.selection, data.focus);
-                if(data.active) selectTab(tabWrapper);
-            }
-            tabStorage.insertBefore(tabWrapper, e.currentTarget);
-        }
-        root.style.setProperty('--events', 'all');
-        e.stopPropagation();
-    }, true);
-
-    tabWrapper.addEventListener('dragenter', (e) => {
-        if(e.currentTarget == e.target) {
-            e.currentTarget.classList.add('dragover');
-        }
-        
-        e.stopPropagation();
-
-        tabWrapper.addEventListener('dragleave', (e) => {
-            if(e.currentTarget == e.target) {
-                e.currentTarget.classList.remove('dragover');
-            }
-            
-            e.stopPropagation();
-        }, { capture: true, once: true });
     }, true);
 
     return tabWrapper;

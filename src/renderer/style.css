@@ -11,24 +11,26 @@ body {
 }
 
 .header {
-    padding-left: 85px;
+    margin-left: 85px;
     height: 38px;
     display: flex;
+    justify-content: space-between;
     gap: 10px;
     position: relative;
 }
 
 .tabs-container {
     display: flex;
+    flex-grow: 1;
 }
 
-.header::after {
+/* .header::after {
     z-index: 0;
     content: "";
     width: 100%;
     height: 100%;
     app-region: drag;
-}
+} */
 
 .tab-wrapper {
     display: flex; 
@@ -49,15 +51,6 @@ body {
     border-top-right-radius: 12px;
     position: relative;
     pointer-events: var(--events);
-}
-
-.dragover {
-    padding-left: 120px;
-    margin-right: 60px;
-}
-
-.dragover > .tab {
-    margin-right: -60px;
 }
 
 .no-events {
@@ -92,4 +85,12 @@ body {
 
 .hidden {
     display: none;
+}
+
+.tab-splitter {
+    z-index: 40;
+}
+
+.tab-splitter-open {
+    width: 124px;
 }
