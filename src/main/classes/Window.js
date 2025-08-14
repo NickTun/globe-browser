@@ -87,8 +87,6 @@ class Window {
     selectTabView(tab_id) {
         this.refreshTabViews(this.activeTab, tab_id);
         this.activeTab = tab_id;
-
-        console.log(this.viewStorage, this.activeTab)
     }
 
     removeTabView(tab_id) {
@@ -118,7 +116,6 @@ class Window {
         this.viewStorage.push(tab);
         this.selectTabView(this.viewStorage.length - 1);
         tab.webContents.on('page-title-updated', () => this.handleTitleChange(tab));
-        console.log(this.viewStorage, this.activeTab)
     }
 }
 

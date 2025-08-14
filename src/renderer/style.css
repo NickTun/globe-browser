@@ -11,7 +11,7 @@ body {
 }
 
 .header {
-    margin-left: 85px;
+    padding-left: 85px;
     height: 38px;
     display: flex;
     justify-content: space-between;

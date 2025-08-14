@@ -17,7 +17,6 @@ window.electronAPI.onAquireId((id, url) => {
 });
 
 window.electronAPI.onAquireTabTitle((title) => {
-    console.log(openTab)
     openTab.childNodes[0].innerHTML = title;
 });
 
@@ -67,8 +66,7 @@ window.addEventListener('dragover', (e) => {
 });
 
 tabStorage.addEventListener('dragenter', (e) => {
-    const check = e.relatedTarget?.classList.contains('outside')
-    if(check == undefined || check) {
+    if(!tabStorage.contains(e.relatedTarget)) {
         window.electronAPI.setDraggedWindowStatus(window.windowId);
         tabSplitter.classList.add('tab-splitter-open');
         console.log("enter")
@@ -85,8 +83,7 @@ tabStorage.addEventListener('dragover', function (e) {
 });
 
 tabStorage.addEventListener('dragleave', (e) => {
-    const check = e.relatedTarget?.classList.contains('outside')
-    if(check == undefined || check) {
+    if(!tabStorage.contains(e.relatedTarget)) {
         window.electronAPI.setDraggedWindowStatus(-1);
         tabSplitter.classList.remove('tab-splitter-open');
         console.log("leave")
@@ -107,7 +104,5 @@ tabStorage.addEventListener('drop', function (e) {
         selectTab(selectedTab);
     }
     tabSplitter.classList.remove('tab-splitter-open');
-
-    console.log(activeTabs)
     e.stopPropagation();
 }, true);
