@@ -38,6 +38,10 @@ class Window {
         })
     }
 
+    handleTitleChange(tab) {
+        this.view.webContents.send('aquire-tab-title', tab.webContents.getTitle());
+    }
+
     Resize(bounds, obj, offset) {
         obj.setBounds({ x: 0, y: 0 + offset, width: bounds.width, height: bounds.height - offset })
     }
@@ -56,9 +60,7 @@ class Window {
         this.Resize(this.win.getBounds(), webView, TAB_TOP_OFFSET);
         this.viewStorage.push(webView);
 
-        webView.webContents.on('page-title-updated', () => {
-            this.view.webContents.send('aquire-tab-title', webView.webContents.getTitle());
-        })
+        webView.webContents.on('page-title-updated', () => this.handleTitleChange(webView));
 
         return this.viewStorage.length - 1;
     }
@@ -106,6 +108,7 @@ class Window {
         const tab = this.viewStorage[tab_id];
         this.viewStorage.splice(tab_id, 1);
         this.win.contentView.removeChildView(tab);
+        tab.webContents.removeAllListeners('page-title-updated');
         return tab;
     }
 
@@ -114,6 +117,7 @@ class Window {
         this.Resize(this.win.getBounds(), tab, TAB_TOP_OFFSET);
         this.viewStorage.push(tab);
         this.selectTabView(this.viewStorage.length - 1);
+        tab.webContents.on('page-title-updated', () => this.handleTitleChange(tab));
         console.log(this.viewStorage, this.activeTab)
     }
 }

@@ -22,6 +22,8 @@ body {
 .tabs-container {
     display: flex;
     flex-grow: 1;
+    position: relative;
+    overflow-x: auto;
 }
 
 /* .header::after {
@@ -31,13 +33,6 @@ body {
     height: 100%;
     app-region: drag;
 } */
-
-.tab-wrapper {
-    display: flex; 
-    justify-content: end;
-    padding-top: 6px;
-    position: relative;
-}
 
 .tab, .new-tab {
     z-index: 20;
@@ -88,9 +83,13 @@ body {
 }
 
 .tab-splitter {
+    height: 100%;
+    background: red;
+    width: 4px;
+    margin-right: -4px;
     z-index: 40;
 }
 
 .tab-splitter-open {
-    width: 124px;
+    width: 120px;
 }

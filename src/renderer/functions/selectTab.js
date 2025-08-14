@@ -3,11 +3,6 @@ import { setOpenTab } from "../variables/openTab.js";
 
 export function selectTab(tab) {
     const url = document.getElementById('url');
-    if(!tab.hasAttribute('data-active')) {
-        pushTab(tab);
-        tab.dataset.active = true;
-        window.electronAPI.newTabView(tab.dataset.url, window.windowId);
-    }
     window.electronAPI.selectTabView(activeTabs.indexOf(tab), window.windowId);
 
     const range = tab.dataset.selection.split(",");

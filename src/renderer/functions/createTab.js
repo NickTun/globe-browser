@@ -1,7 +1,6 @@
 const tabStorage = document.getElementById('tabs-container');
-const root = document.querySelector(':root');
 const tabSplitter = document.getElementById('tab-splitter');
-import { activeTabs } from "../variables/activeTabs.js";
+import { pushTab, activeTabs, spliceTab } from "../variables/activeTabs.js";
 import { openTab } from '../variables/openTab.js';
 import { selectTab } from './selectTab.js';
 import { closeTab } from './closeTab.js';
@@ -26,16 +25,21 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
     tab.draggable = true;
 
     tab.addEventListener('click', function (e) {
-        selectTab(this.parentElement);
+        if(!tab.hasAttribute('data-active')) {
+            pushTab(tab);
+            tab.dataset.active = true;
+            window.electronAPI.newTabView(tab.dataset.url, window.windowId);
+        }
+        selectTab(this);
     });
 
     close.addEventListener('click', (e) => {
-        closeTab(e.target.parentElement.parentElement);
+        closeTab(e.target.parentElement);
         e.stopPropagation();
     }, true);
 
     unload.addEventListener('click', (e) => {
-        unloadTab(e.target.parentElement.parentElement);
+        unloadTab(e.target.parentElement);
         e.stopPropagation();
     }, true);
 
@@ -64,9 +68,9 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         e.stopPropagation();
 
         this.addEventListener('drag', (e) => {
-            e.target.classList.add('hidden');
-            tabStorage.removeChild(e.target);
-            tabStorage.appendChild(e.target);
+            tabSplitter.classList.add('tab-splitter-open');
+            spliceTab(activeTabs.indexOf(e.target));
+            e.target.remove();
         }, { once:true });
 
         tab.addEventListener('dragend', async (e) => {
@@ -74,12 +78,14 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
             tabSplitter.classList.remove('tab-splitter-open');
             const outside = await window.electronAPI.getDraggedWindowStatus();
             if(outside == window.windowId) {
-                e.target.classList.remove('hidden');
+                console.log("inner movement");
             } else if (outside == -1) {
-                window.electronAPI.createWindow(data);
-                closeTab(e.target);
+                // window.electronAPI.createWindow(data);
+                // closeTab(e.target);
+                console.log("new window");
             } else {
-                closeTab(e.target);
+                console.log("existing window")
+                // closeTab(e.target);
             }
         }, { once: true });
     }, true);

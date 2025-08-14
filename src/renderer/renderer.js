@@ -1,7 +1,6 @@
 const tabStorage = document.getElementById('tabs-container');
 const tabSplitter = document.getElementById('tab-splitter');
-const root = document.querySelector(':root');
-import { activeTabs } from './variables/activeTabs.js';
+import { pushTab, activeTabs } from './variables/activeTabs.js';
 import { openTab } from './variables/openTab.js';
 import { addTab } from './functions/addTab.js';
 import { selectTab } from './functions/selectTab.js';
@@ -10,16 +9,25 @@ window.windowId = null;
 
 window.electronAPI.onAquireId((id, url) => {
     if(!window.windowId) window.windowId = id;
-    selectTab(addTab(url));
+    const tab = addTab(url);
+    pushTab(tab);
+    tab.dataset.active = true;
+    window.electronAPI.newTabView(tab.dataset.url, window.windowId);
+    selectTab(tab);
 });
 
 window.electronAPI.onAquireTabTitle((title) => {
+    console.log(openTab)
     openTab.childNodes[0].innerHTML = title;
 });
 
 const newTab = document.getElementById('new-tab');
 newTab.addEventListener('click', () => {
-    selectTab(addTab());
+    const tab = addTab();
+    pushTab(tab);
+    tab.dataset.active = true;
+    window.electronAPI.newTabView(tab.dataset.url, window.windowId);
+    selectTab(tab);
 });
 
 newTab.addEventListener('mousedown', (e) => {
@@ -63,7 +71,7 @@ tabStorage.addEventListener('dragenter', (e) => {
     if(check == undefined || check) {
         window.electronAPI.setDraggedWindowStatus(window.windowId);
         tabSplitter.classList.add('tab-splitter-open');
-        // root.style.setProperty('--events', 'none');
+        console.log("enter")
     }
     
     e.preventDefault();
@@ -81,7 +89,7 @@ tabStorage.addEventListener('dragleave', (e) => {
     if(check == undefined || check) {
         window.electronAPI.setDraggedWindowStatus(-1);
         tabSplitter.classList.remove('tab-splitter-open');
-        // root.style.setProperty('--events', 'all');
+        console.log("leave")
     }
     
     e.preventDefault();
@@ -89,15 +97,17 @@ tabStorage.addEventListener('dragleave', (e) => {
 
 tabStorage.addEventListener('drop', function (e) {
     const data = JSON.parse(e.dataTransfer.getData('json'));
-    let selectedTab = null;
-    if(data.windowId == windowId) {
-        selectedTab = document.querySelector('.hidden');
-    } else {
-        // window.electronAPI.exchangeViews(data.tab_id, data.windowId, window.windowId);
-        selectedTab = createTab(data.url, data.title, data.selection, data.focus);
-        if(data.active) selectTab(selectedTab);
-    }
+    const selectedTab = createTab(data.url, data.title, data.selection, data.focus, data.active);    
     this.insertBefore(selectedTab, tabSplitter);
+    if(data.active) {
+        pushTab(selectedTab);
+        if(data.windowId != windowId) {
+            window.electronAPI.exchangeViews(data.tab_id, data.windowId, window.windowId);
+        }
+        selectTab(selectedTab);
+    }
     tabSplitter.classList.remove('tab-splitter-open');
+
+    console.log(activeTabs)
     e.stopPropagation();
 }, true);
