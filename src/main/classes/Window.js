@@ -53,7 +53,6 @@ class Window {
     refreshTabViews(prevActive, active) {
         if(this.viewStorage[prevActive]) this.viewStorage[prevActive].setVisible(false);
         if(this.viewStorage[active]) this.viewStorage[active].setVisible(true);
-        console.log(this.viewStorage)
     }
 
     addNewTab() {
@@ -109,7 +108,6 @@ class Window {
 
     getTab(tab_id) {
         const tab = this.viewStorage[tab_id];
-        console.log(tab)
         this.viewStorage.splice(tab_id, 1);
         this.win.contentView.removeChildView(tab);
         tab.webContents.removeAllListeners('page-title-updated');

@@ -51,13 +51,15 @@ urlWrapper.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const formData = new FormData(e.target);
-    if(!openTab.hasAttribute('data-active')) {
-        pushTab(openTab);
-        openTab.dataset.active = true;
-        window.electronAPI.newTabView(formData.get('url'), window.windowId);
-        window.electronAPI.selectTabView(activeTabs.indexOf(openTab), window.windowId);
-    } else {
-        window.electronAPI.loadUrl(formData.get('url'), activeTabs.indexOf(openTab), window.windowId);
+    if(formData.get('url') != "") {
+        if(!openTab.hasAttribute('data-active')) {
+            pushTab(openTab);
+            openTab.dataset.active = true;
+            window.electronAPI.newTabView(formData.get('url'), window.windowId);
+            window.electronAPI.selectTabView(activeTabs.indexOf(openTab), window.windowId);
+        } else {
+            window.electronAPI.loadUrl(formData.get('url'), activeTabs.indexOf(openTab), window.windowId);
+        }
     }
 });
 

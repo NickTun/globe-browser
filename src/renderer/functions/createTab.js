@@ -82,12 +82,12 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
             tabSplitter.classList.remove('tab-splitter-open');
             const outside = await window.electronAPI.getDraggedWindowStatus();
             if(outside != window.windowId) {
+                let flag = false;
                 if (outside == -1) { 
                     window.electronAPI.createWindow(data);
-                    handleTabAbsence(true);
-                } else {
-                    handleTabAbsence();
+                    if(data.active) flag = true;
                 }
+                handleTabAbsence(flag);
             }
         }, { once: true });
     }, true);
