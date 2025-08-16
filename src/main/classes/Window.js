@@ -4,7 +4,7 @@ const rootDir = path.resolve(__dirname, '..', '..', '..');
 
 const TAB_TOP_OFFSET = 70;
 class Window {
-    constructor(id, url="") {
+    constructor(id, data) {
         this.id = id;
         this.activeTab = 0;
         this.viewStorage = [];
@@ -24,7 +24,7 @@ class Window {
         this.win.contentView.addChildView(this.view);
         this.view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
         this.Resize(this.win.getBounds(), this.view, 0);
-        this.view.webContents.openDevTools({mode: 'detach'});
+        // this.view.webContents.openDevTools({mode: 'detach'});
 
         this.win.on('resize', () => {
             this.viewStorage.forEach((webView) => {
@@ -34,8 +34,12 @@ class Window {
         });
 
         this.view.webContents.on('did-finish-load', () => {
-            this.view.webContents.send('aquire-id', this.id, url);
-        })
+            this.view.webContents.send('aquire-id', this.id, data);
+        });
+
+        this.win.on('closed', () => {
+            this.view.webContents.close()
+        });
     }
 
     handleTitleChange(tab) {
@@ -48,7 +52,8 @@ class Window {
 
     refreshTabViews(prevActive, active) {
         if(this.viewStorage[prevActive]) this.viewStorage[prevActive].setVisible(false);
-        this.viewStorage[active].setVisible(true);
+        if(this.viewStorage[active]) this.viewStorage[active].setVisible(true);
+        console.log(this.viewStorage)
     }
 
     addNewTab() {
@@ -104,9 +109,11 @@ class Window {
 
     getTab(tab_id) {
         const tab = this.viewStorage[tab_id];
+        console.log(tab)
         this.viewStorage.splice(tab_id, 1);
         this.win.contentView.removeChildView(tab);
         tab.webContents.removeAllListeners('page-title-updated');
+        this.view.webContents.send('window-cleanup');
         return tab;
     }
 

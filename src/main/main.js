@@ -20,8 +20,9 @@ app.whenReady().then(() => {
   winStorage.push(new Window(winStorage.length));
 
   ipcMain.on('new-tab-view', (e, url, id) => {
-    const urlString = url != "" ? url : `file://${path.join(rootDir, 'src', 'renderer', 'pages', 'new_tab', 'index.html')}`;
-    winStorage[id].loadViewURL(urlString, winStorage[id].addNewTab());
+    if(url != "") {
+      winStorage[id].loadViewURL(url, winStorage[id].addNewTab());
+    }
   });
 
   ipcMain.on('load-url', (e, url, tab_id, id) => {
@@ -41,7 +42,7 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on('create-window', (e, data) => {
-    winStorage.push(new Window(winStorage.length, data.url));
+    winStorage.push(new Window(winStorage.length, data));
   });
 
   ipcMain.on('exchange-views', (e, tab_id, id_from, id_to) => {

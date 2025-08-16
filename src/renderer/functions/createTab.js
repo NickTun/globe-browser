@@ -5,6 +5,7 @@ import { openTab } from '../variables/openTab.js';
 import { selectTab } from './selectTab.js';
 import { closeTab } from './closeTab.js';
 import { unloadTab } from './unloadTab.js';
+import { handleTabAbsence } from "./handleTabAbsence.js";
 
 export function createTab(url_str="", title_str="New Tab", selection=[0, 0], focus=false, active=false) {
     const tab = document.createElement('div');
@@ -14,6 +15,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
     close.innerHTML = "x";
     unload.innerHTML = "u";
     tab.classList.add('tab');
+    title.classList.add('tab-title');
     tab.appendChild(title);
     tab.appendChild(close);
     tab.appendChild(unload);
@@ -25,10 +27,10 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
     tab.draggable = true;
 
     tab.addEventListener('click', function (e) {
-        if(!tab.hasAttribute('data-active')) {
+        if(!this.hasAttribute('data-active') && this.dataset.url != "") {
             pushTab(tab);
-            tab.dataset.active = true;
-            window.electronAPI.newTabView(tab.dataset.url, window.windowId);
+            this.dataset.active = true;
+            window.electronAPI.newTabView(this.dataset.url, window.windowId);
         }
         selectTab(this);
     });
@@ -39,7 +41,9 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
     }, true);
 
     unload.addEventListener('click', (e) => {
-        unloadTab(e.target.parentElement);
+        if(e.target.parentElement.hasAttribute('data-active')) {
+            unloadTab(e.target.parentElement);
+        }  
         e.stopPropagation();
     }, true);
 
@@ -67,25 +71,23 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         e.dataTransfer.setData('json', JSON.stringify(data));
         e.stopPropagation();
 
-        this.addEventListener('drag', (e) => {
+        this.addEventListener('drag', function () {
             tabSplitter.classList.add('tab-splitter-open');
-            spliceTab(activeTabs.indexOf(e.target));
-            e.target.remove();
+            if(data.active) spliceTab(activeTabs.indexOf(this));
+            this.remove();
         }, { once:true });
 
         tab.addEventListener('dragend', async (e) => {
             e.target.classList.remove('dragged');
             tabSplitter.classList.remove('tab-splitter-open');
             const outside = await window.electronAPI.getDraggedWindowStatus();
-            if(outside == window.windowId) {
-                console.log("inner movement");
-            } else if (outside == -1) {
-                // window.electronAPI.createWindow(data);
-                // closeTab(e.target);
-                console.log("new window");
-            } else {
-                console.log("existing window")
-                // closeTab(e.target);
+            if(outside != window.windowId) {
+                if (outside == -1) { 
+                    window.electronAPI.createWindow(data);
+                    handleTabAbsence(true);
+                } else {
+                    handleTabAbsence();
+                }
             }
         }, { once: true });
     }, true);

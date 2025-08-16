@@ -1,18 +1,26 @@
 const tabStorage = document.getElementById('tabs-container');
 const tabSplitter = document.getElementById('tab-splitter');
-import { pushTab, activeTabs } from './variables/activeTabs.js';
+import { pushTab, insertTab, activeTabs } from './variables/activeTabs.js';
 import { openTab } from './variables/openTab.js';
 import { addTab } from './functions/addTab.js';
 import { selectTab } from './functions/selectTab.js';
 import { createTab } from './functions/createTab.js';
 window.windowId = null;
 
-window.electronAPI.onAquireId((id, url) => {
+window.electronAPI.onAquireId((id, data) => {
     if(!window.windowId) window.windowId = id;
-    const tab = addTab(url);
-    pushTab(tab);
-    tab.dataset.active = true;
-    window.electronAPI.newTabView(tab.dataset.url, window.windowId);
+    const tab = addTab();
+    if(data) {
+        if(data.active) {
+            pushTab(tab);
+            tab.dataset.active = true;
+            window.electronAPI.exchangeViews(data.tab_id, data.windowId, window.windowId);
+        }
+        tab.dataset.url = data.url;
+        tab.dataset.selection = data.selection;
+        tab.dataset.focus = data.focus;
+        tab.firstChild.innerHTML = data.title;
+    }
     selectTab(tab);
 });
 
@@ -23,9 +31,6 @@ window.electronAPI.onAquireTabTitle((title) => {
 const newTab = document.getElementById('new-tab');
 newTab.addEventListener('click', () => {
     const tab = addTab();
-    pushTab(tab);
-    tab.dataset.active = true;
-    window.electronAPI.newTabView(tab.dataset.url, window.windowId);
     selectTab(tab);
 });
 
@@ -46,7 +51,14 @@ urlWrapper.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const formData = new FormData(e.target);
-    window.electronAPI.loadUrl(formData.get('url'), activeTabs.indexOf(openTab), window.windowId);
+    if(!openTab.hasAttribute('data-active')) {
+        pushTab(openTab);
+        openTab.dataset.active = true;
+        window.electronAPI.newTabView(formData.get('url'), window.windowId);
+        window.electronAPI.selectTabView(activeTabs.indexOf(openTab), window.windowId);
+    } else {
+        window.electronAPI.loadUrl(formData.get('url'), activeTabs.indexOf(openTab), window.windowId);
+    }
 });
 
 url.addEventListener('input', (e) => {
@@ -69,7 +81,6 @@ tabStorage.addEventListener('dragenter', (e) => {
     if(!tabStorage.contains(e.relatedTarget)) {
         window.electronAPI.setDraggedWindowStatus(window.windowId);
         tabSplitter.classList.add('tab-splitter-open');
-        console.log("enter")
     }
     
     e.preventDefault();
@@ -77,8 +88,14 @@ tabStorage.addEventListener('dragenter', (e) => {
 
 tabStorage.addEventListener('dragover', function (e) {
     this.removeChild(tabSplitter);
-    const offset = Math.floor((e.clientX-this.getBoundingClientRect().x)/120);
-    this.insertBefore(tabSplitter, this.children[offset]);
+    const width = this.childElementCount > 0 ? this.lastChild.getBoundingClientRect().width : 120;
+    const offset = Math.floor((e.clientX-this.getBoundingClientRect().x)/width);
+    if(this.childElementCount > 0) {
+        this.insertBefore(tabSplitter, this.children[offset]);
+    } else {
+        this.appendChild(tabSplitter);
+    }
+    
     this.dataset.offset = offset;
 });
 
@@ -86,7 +103,6 @@ tabStorage.addEventListener('dragleave', (e) => {
     if(!tabStorage.contains(e.relatedTarget)) {
         window.electronAPI.setDraggedWindowStatus(-1);
         tabSplitter.classList.remove('tab-splitter-open');
-        console.log("leave")
     }
     
     e.preventDefault();
@@ -97,8 +113,10 @@ tabStorage.addEventListener('drop', function (e) {
     const selectedTab = createTab(data.url, data.title, data.selection, data.focus, data.active);    
     this.insertBefore(selectedTab, tabSplitter);
     if(data.active) {
-        pushTab(selectedTab);
-        if(data.windowId != windowId) {
+        if(data.windowId == windowId) {
+            insertTab(data.tab_id, selectedTab)
+        } else {
+            pushTab(selectedTab);
             window.electronAPI.exchangeViews(data.tab_id, data.windowId, window.windowId);
         }
         selectTab(selectedTab);

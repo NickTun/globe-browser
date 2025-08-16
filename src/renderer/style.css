@@ -48,6 +48,12 @@ body {
     pointer-events: var(--events);
 }
 
+.tab-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .no-events {
     pointer-events: none;
 }
@@ -83,10 +89,10 @@ body {
 }
 
 .tab-splitter {
-    height: 100%;
+    /* height: 100%;
     background: red;
-    width: 4px;
-    margin-right: -4px;
+    width: 4px; 
+    margin-right: -4px; */
     z-index: 40;
 }
 
