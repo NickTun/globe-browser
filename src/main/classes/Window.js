@@ -29,7 +29,7 @@ class Window {
         this.win.contentView.addChildView(this.view);
         this.view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
         this.Resize(this.win.getBounds(), this.view);
-        this.view.webContents.openDevTools({mode: 'detach'});
+        // this.view.webContents.openDevTools({mode: 'detach'});
 
         this.win.on('resize', () => {
             this.viewStorage.forEach((webView) => {

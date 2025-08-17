@@ -89,10 +89,10 @@ body {
 }
 
 .tab-splitter {
-    /* height: 100%;
+    height: 100%;
     background: red;
     width: 4px; 
-    margin-right: -4px; */
+    margin-right: -4px;
     z-index: 40;
 }
 
