@@ -24,8 +24,8 @@ window.electronAPI.onAquireId((id, data) => {
     selectTab(tab);
 });
 
-window.electronAPI.onAquireTabTitle((title) => {
-    openTab.childNodes[0].innerHTML = title;
+window.electronAPI.onAquireTabTitle((title, tab_id) => {
+    activeTabs[tab_id].childNodes[0].innerHTML = title;
 });
 
 const newTab = document.getElementById('new-tab');

@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeTabView: (tab_id, id) => ipcRenderer.send('remove-tab-view', tab_id, id),
   loadUrl: (url, tab_id, id) => ipcRenderer.send('load-url', url, tab_id, id),
   onAquireId: (callback) => ipcRenderer.on('aquire-id', (_event, id, url) => callback(id, url)),
-  onAquireTabTitle: (callback) => ipcRenderer.on('aquire-tab-title', (_event, title) => callback(title)),
+  onAquireTabTitle: (callback) => ipcRenderer.on('aquire-tab-title', (_event, title, tab_id) => callback(title, tab_id)),
   closeWindow: (id) => ipcRenderer.send('close-window', id),
   createWindow: (data) => ipcRenderer.send('create-window', data),
   getDraggedWindowStatus: () => ipcRenderer.invoke('get-dragged-window-status'),

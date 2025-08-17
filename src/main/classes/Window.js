@@ -2,7 +2,12 @@ const { BaseWindow, WebContentsView, Menu } = require('electron/main');
 const path = require('path');
 const rootDir = path.resolve(__dirname, '..', '..', '..');
 
-const TAB_TOP_OFFSET = 70;
+const OFFSET = {
+    border: 4,
+    y: 68,
+}
+
+const RADIUS = 10;
 class Window {
     constructor(id, data) {
         this.id = id;
@@ -23,14 +28,14 @@ class Window {
 
         this.win.contentView.addChildView(this.view);
         this.view.webContents.loadURL(`file://${path.join(rootDir, 'src', 'renderer', 'index.html')}`);
-        this.Resize(this.win.getBounds(), this.view, 0);
-        // this.view.webContents.openDevTools({mode: 'detach'});
+        this.Resize(this.win.getBounds(), this.view);
+        this.view.webContents.openDevTools({mode: 'detach'});
 
         this.win.on('resize', () => {
             this.viewStorage.forEach((webView) => {
-                this.Resize(this.win.getBounds(), webView, TAB_TOP_OFFSET);
+                this.Resize(this.win.getBounds(), webView, OFFSET);
             });
-            this.Resize(this.win.getBounds(), this.view, 0);
+            this.Resize(this.win.getBounds(), this.view);
         });
 
         this.view.webContents.on('did-finish-load', () => {
@@ -43,11 +48,16 @@ class Window {
     }
 
     handleTitleChange(tab) {
-        this.view.webContents.send('aquire-tab-title', tab.webContents.getTitle());
+        this.view.webContents.send('aquire-tab-title', tab.webContents.getTitle(), this.viewStorage.indexOf(tab));
     }
 
-    Resize(bounds, obj, offset) {
-        obj.setBounds({ x: 0, y: 0 + offset, width: bounds.width, height: bounds.height - offset })
+    Resize(bounds, obj, offset={ border: 0, y: 0 }) {
+        obj.setBounds({
+            x: 0 + offset.border,
+            y: 0 + offset.y + offset.border,
+            width: bounds.width - offset.border*2,
+            height: bounds.height - offset.y - offset.border * 2
+        });
     }
 
     refreshTabViews(prevActive, active) {
@@ -57,11 +67,12 @@ class Window {
 
     addNewTab() {
         const webView = new WebContentsView();
+        webView.setBorderRadius(RADIUS);
         this.win.contentView.addChildView(webView);
         webView.webContents.addListener('context-menu', () => {
-        drawMenu(webView);
+            this.drawMenu(webView);
         })
-        this.Resize(this.win.getBounds(), webView, TAB_TOP_OFFSET);
+        this.Resize(this.win.getBounds(), webView, OFFSET);
         this.viewStorage.push(webView);
 
         webView.webContents.on('page-title-updated', () => this.handleTitleChange(webView));
@@ -117,7 +128,7 @@ class Window {
 
     pushTab(tab) {
         this.win.contentView.addChildView(tab);
-        this.Resize(this.win.getBounds(), tab, TAB_TOP_OFFSET);
+        this.Resize(this.win.getBounds(), tab, OFFSET);
         this.viewStorage.push(tab);
         this.selectTabView(this.viewStorage.length - 1);
         tab.webContents.on('page-title-updated', () => this.handleTitleChange(tab));
