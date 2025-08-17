@@ -1,5 +1,5 @@
 import { pushTab, activeTabs } from "../variables/activeTabs.js";
-import { setOpenTab } from "../variables/openTab.js";
+import { openTab, setOpenTab } from "../variables/openTab.js";
 
 export function selectTab(tab) {
     const url = document.getElementById('url');
@@ -8,7 +8,10 @@ export function selectTab(tab) {
     const range = tab.dataset.selection.split(",");
     const focus = tab.hasAttribute('data-focus');
 
+    openTab?.classList.remove('open-tab');
+    tab.classList.add('open-tab');
     setOpenTab(tab);
+    
     url.value = tab.dataset.url;
     
     if(focus) {

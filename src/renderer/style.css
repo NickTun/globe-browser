@@ -99,3 +99,7 @@ body {
 .tab-splitter-open {
     width: 120px;
 }
+
+.open-tab {
+    background: whitesmoke;
+}

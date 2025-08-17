@@ -5,7 +5,7 @@ const tabStorage = document.getElementById('tabs-container');
 export function closeTab(tab) {
     if(tab.hasAttribute('data-active')) unloadTab(tab);
     const index = Array.prototype.indexOf.call(tabStorage.children, tab);
-    console.log(index)
+    const isOpen = tab.classList.contains('open-tab');
     tab.remove();
-    handleTabClosure(index);
+    handleTabClosure(index, isOpen);
 }

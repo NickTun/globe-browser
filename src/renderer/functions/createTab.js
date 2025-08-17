@@ -65,6 +65,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         }
 
         const tab_position = Array.prototype.indexOf.call(tabStorage.children, this);
+        const isOpen = this.classList.contains('open-tab');
 
         e.dataTransfer.setData('json', JSON.stringify(data));
         e.stopPropagation();
@@ -83,7 +84,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
                     window.electronAPI.createWindow(data);
                     if(data.active) flag = true;
                 }
-                handleTabClosure(tab_position, flag);
+                handleTabClosure(tab_position, isOpen, flag);
             }
         }, { once: true });
     }, true);

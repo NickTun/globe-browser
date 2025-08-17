@@ -130,7 +130,7 @@ class Window {
         this.win.contentView.addChildView(tab);
         this.Resize(this.win.getBounds(), tab, OFFSET);
         this.viewStorage.push(tab);
-        this.selectTabView(this.viewStorage.length - 1);
+        // this.selectTabView(this.viewStorage.length - 1);
         tab.webContents.on('page-title-updated', () => this.handleTitleChange(tab));
     }
 }
