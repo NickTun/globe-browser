@@ -51,6 +51,10 @@ class Window {
         this.view.webContents.send('aquire-tab-title', tab.webContents.getTitle(), this.viewStorage.indexOf(tab));
     }
 
+    handleUrlChange(tab) {
+        this.view.webContents.send('url-change', tab.webContents.getURL(), this.viewStorage.indexOf(tab));
+    }
+
     Resize(bounds, obj, offset={ border: 0, y: 0 }) {
         obj.setBounds({
             x: 0 + offset.border,
@@ -69,9 +73,13 @@ class Window {
         const webView = new WebContentsView();
         webView.setBorderRadius(RADIUS);
         this.win.contentView.addChildView(webView);
+
         webView.webContents.addListener('context-menu', () => {
             this.drawMenu(webView);
         })
+
+        webView.webContents.on('did-navigate', () => this.handleUrlChange(webView));
+
         this.Resize(this.win.getBounds(), webView, OFFSET);
         this.viewStorage.push(webView);
 
@@ -122,6 +130,7 @@ class Window {
         this.viewStorage.splice(tab_id, 1);
         this.win.contentView.removeChildView(tab);
         tab.webContents.removeAllListeners('page-title-updated');
+        tab.webContents.removeAllListeners('did-navigate');
         this.view.webContents.send('window-cleanup');
         return tab;
     }
@@ -130,8 +139,8 @@ class Window {
         this.win.contentView.addChildView(tab);
         this.Resize(this.win.getBounds(), tab, OFFSET);
         this.viewStorage.push(tab);
-        // this.selectTabView(this.viewStorage.length - 1);
         tab.webContents.on('page-title-updated', () => this.handleTitleChange(tab));
+        tab.webContents.on('did-navigate', () => this.handleUrlChange(tab));
     }
 }
 

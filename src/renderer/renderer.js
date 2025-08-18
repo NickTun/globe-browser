@@ -1,10 +1,15 @@
-const tabStorage = document.getElementById('tabs-container');
 import { pushTab, insertTab, activeTabs } from './variables/activeTabs.js';
 import { openTab } from './variables/openTab.js';
 import { addTab } from './functions/addTab.js';
 import { selectTab } from './functions/selectTab.js';
 import { createTab } from './functions/createTab.js';
 import { tabSplitter, handleTabSplitter } from './functions/handleTabSplitter.js';
+
+const tabStorage = document.getElementById('tabs-container');
+const urlWrapper = document.getElementById('url-wrapper');
+const url = document.getElementById('url');
+const newTab = document.getElementById('new-tab');
+
 window.windowId = null;
 
 window.electronAPI.onAquireId((id, data) => {
@@ -28,7 +33,11 @@ window.electronAPI.onAquireTabTitle((title, tab_id) => {
     activeTabs[tab_id].children[0].innerHTML = title;
 });
 
-const newTab = document.getElementById('new-tab');
+window.electronAPI.onUrlChange((url_str, tab_id) => {
+    activeTabs[tab_id].dataset.url = url_str;
+    url.value = url_str;
+});
+
 newTab.addEventListener('click', () => {
     const tab = addTab();
     selectTab(tab);
@@ -43,9 +52,6 @@ newTab.addEventListener('mousedown', (e) => {
         }
     }
 });
-
-const urlWrapper = document.getElementById('url-wrapper');
-const url = document.getElementById('url');
 
 urlWrapper.addEventListener('submit', (e) => {
     e.preventDefault();

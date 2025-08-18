@@ -14,4 +14,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setDraggedWindowStatus: (id) => ipcRenderer.send('set-dragged-window-status', id),
   exchangeViews: (tab_id, id_from, id_to) => ipcRenderer.send('exchange-views', tab_id, id_from, id_to),
   onWindowCleanup: (callback) => ipcRenderer.once('window-cleanup', (_event) => callback()),
+  onUrlChange: (callback) => ipcRenderer.on('url-change', (_event, url, tab_id) => callback(url, tab_id)),
 });
