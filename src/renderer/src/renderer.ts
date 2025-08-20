@@ -4,6 +4,8 @@ import { addTab } from '../functions/addTab'
 import { selectTab } from '../functions/selectTab'
 import { createTab } from '../functions/createTab'
 import { tabSplitter, handleTabSplitter } from '../functions/handleTabSplitter'
+import autoAnimate from '@formkit/auto-animate'
+import animationParams from '../functions/animationParams'
 
 const tabStorage = document.getElementById('tabs-container')
 const urlWrapper = document.getElementById('url-wrapper')
@@ -31,6 +33,7 @@ window.electronAPI.onAquireId((id, data) => {
         tab.children[0].innerHTML = data.title
     }
     selectTab(tab)
+    autoAnimate(tabStorage as HTMLElement, animationParams)
 })
 
 window.electronAPI.onAquireTabTitle((title, tab_id) => {
@@ -92,6 +95,10 @@ window.addEventListener('dragover', (e) => {
 
 tabStorage?.addEventListener('dragenter', function (e) {
     if(!tabStorage.contains(e.relatedTarget as Node | null)) {
+        this.addEventListener('dragover', () => {
+            autoAnimate(tabStorage as HTMLElement, animationParams).enable()
+        }, { once: true })
+        
         window.electronAPI.setDraggedWindowStatus(window.windowId as number)
     }
     
@@ -104,6 +111,7 @@ tabStorage?.addEventListener('dragover', function (e) {
 
 tabStorage?.addEventListener('dragleave', (e) => {
     if(!tabStorage.contains(e.relatedTarget as Node | null)) {
+        autoAnimate(tabStorage as HTMLElement, animationParams).disable()
         window.electronAPI.setDraggedWindowStatus(-1)
         tabStorage.removeChild(tabSplitter)
         tabStorage.dataset.offset = "-1"

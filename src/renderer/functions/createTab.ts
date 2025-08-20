@@ -6,6 +6,8 @@ import { closeTab } from './closeTab'
 import { unloadTab } from './unloadTab'
 import { handleTabClosure } from "./handleTabClosure"
 import { pickTab } from "./pickTab.js"
+import autoAnimate from "@formkit/auto-animate"
+import animationParams from "./animationParams"
 
 export function createTab(url_str="", title_str="New Tab", selection=[0, 0], focus=false, active=false): HTMLDivElement {
     const tab = document.createElement('div')
@@ -52,6 +54,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
     })
 
     tab.addEventListener('dragstart', function (e) {
+        autoAnimate(tabStorage as HTMLElement, animationParams).disable();
         (e.dataTransfer as DataTransfer).effectAllowed = "move";
         (e.target as HTMLDivElement).classList.add('dragged')
 
@@ -79,7 +82,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
         tab.addEventListener('dragend', async function() {
             this.classList.remove('dragged')
             const outside = await window.electronAPI.getDraggedWindowStatus()
-            console.log(outside)
+            autoAnimate(tabStorage as HTMLElement, animationParams).enable()
             if(outside != window.windowId) {
                 let flag = false
                 if (outside == -1) { 

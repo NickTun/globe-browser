@@ -23,7 +23,7 @@ body {
     display: flex;
     flex-grow: 1;
     position: relative;
-    overflow-x: auto;
+    overflow: hidden;
 }
 
 /* .header::after {
@@ -87,15 +87,6 @@ body {
 .hidden {
     display: none;
 }
-
-.tab-splitter {
-    height: 100%;
-    background: red;
-    width: 4px; 
-    margin-right: -4px;
-    z-index: 40;
-}
-
 .tab-splitter-open {
     width: 120px;
 }
