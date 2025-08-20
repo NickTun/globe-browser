@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: globe-browser-new
+productName: globe-browser
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: globe-browser-new
+  executableName: globe-browser
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

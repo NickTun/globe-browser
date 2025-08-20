@@ -1,4 +1,4 @@
-# globe-browser-new
+# globe-browser
 
 A minimal Electron application with TypeScript
 
