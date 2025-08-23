@@ -1,10 +1,10 @@
 import { app, ipcMain } from 'electron/main'
 import Window from './classes/Window'
-import icon from '../../resources/icon.png?asset'
+// import icon from '../../resources/icon.png?asset'
 
-if (app.dock) {
-  app.dock.setIcon(icon)
-}
+// if (app.dock) {
+//   app.dock.setIcon(icon)
+// }
 
 const winStorage: Array<Window> = []
 let draggedWindowStatus = -1

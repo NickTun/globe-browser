@@ -2,7 +2,7 @@ import { BaseWindow, WebContentsView, Menu } from 'electron/main'
 import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
 import WindowTabInfo from '../../types/WindowTabInfo'
-import icon from '../../../resources/icon.png?asset'
+import icon from '../../../build/icon.png?asset'
 
 const OFFSET = {
     border: 4,
