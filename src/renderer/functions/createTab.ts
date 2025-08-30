@@ -62,14 +62,14 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
             title: this.children[0].innerHTML,
             url: this.dataset.url,
             selection: this.hasAttribute('data-selection') ? this.dataset.selection : null,
-            focus: this.hasAttribute('data-focus') ? true : false,
-            active: this.hasAttribute('data-active') ? true : false,
+            focus: this.hasAttribute('data-focus'),
+            active: this.hasAttribute('data-active'),
+            open: this.hasAttribute('data-open'),
             windowId: window.windowId as number,
             tab_id: activeTabs.indexOf(this)
         }
 
-        const tab_position = Array.prototype.indexOf.call(tabStorage?.children, this)
-        const isOpen = this.classList.contains('open-tab');
+        const tab_position = Array.prototype.indexOf.call(tabStorage?.children, this);
 
         (e.dataTransfer as DataTransfer).setData('json', JSON.stringify(data))
         e.stopPropagation()
@@ -89,7 +89,7 @@ export function createTab(url_str="", title_str="New Tab", selection=[0, 0], foc
                     window.electronAPI.createWindow(data)
                     if(data.active) flag = true
                 }
-                handleTabClosure(tab_position, isOpen, flag)
+                handleTabClosure(tab_position, data.open, flag)
             }
         }, { once: true })
     }, true)

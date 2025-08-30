@@ -8,8 +8,8 @@ export function selectTab(tab): void {
     const range = tab.dataset.selection.split(",")
     const focus = tab.hasAttribute('data-focus')
 
-    openTab?.classList.remove('open-tab')
-    tab.classList.add('open-tab')
+    openTab?.removeAttribute('data-open')
+    tab.setAttribute('data-open', "" )
     setOpenTab(tab)
     
     url.value = tab.dataset.url

@@ -17,5 +17,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onWindowCleanup: (callback: () => void) => ipcRenderer.once('window-cleanup', (_event) => callback()),
   onUrlChange: (callback: (url: string, tab_id: number) => void) => ipcRenderer.on('url-change', (_event, url, tab_id) => callback(url, tab_id)),
+  onMenuStateChange: (callback: (state: boolean) => void) => ipcRenderer.on('menu-state-change', (_event, state) => callback(state)),
 })
 

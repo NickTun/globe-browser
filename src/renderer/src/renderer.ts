@@ -34,16 +34,26 @@ window.electronAPI.onAquireId((id, data) => {
     }
     selectTab(tab)
     autoAnimate(tabStorage as HTMLElement, animationParams)
+
+    window.electronAPI.onMenuStateChange((state) => {
+        if(state) {
+            document.body.classList.remove('hidden')
+        } else {
+            document.body.classList.add('hidden')
+        }
+    })
+
+    window.electronAPI.onAquireTabTitle((title, tab_id) => {
+        activeTabs[tab_id].children[0].innerHTML = title
+    })
+
+    window.electronAPI.onUrlChange((url_str, tab_id) => {
+        activeTabs[tab_id].dataset.url = url_str
+        url.value = url_str
+    })
 })
 
-window.electronAPI.onAquireTabTitle((title, tab_id) => {
-    activeTabs[tab_id].children[0].innerHTML = title
-})
 
-window.electronAPI.onUrlChange((url_str, tab_id) => {
-    activeTabs[tab_id].dataset.url = url_str
-    url.value = url_str
-})
 
 newTab?.addEventListener('click', () => {
     const tab = addTab()
@@ -122,6 +132,7 @@ tabStorage?.addEventListener('dragleave', (e) => {
 
 tabStorage?.addEventListener('drop', function (e) {
     if(e.dataTransfer?.getData('json')) {
+        e.stopPropagation()
         const data = JSON.parse(e.dataTransfer?.getData('json'))
         const selectedTab = createTab(data.url, data.title, data.selection, data.focus, data.active) 
 
@@ -137,8 +148,10 @@ tabStorage?.addEventListener('drop', function (e) {
                 pushTab(selectedTab)
                 window.electronAPI.exchangeViews(data.tab_id, data.windowId, window.windowId as number)
             }
+        }
+
+        if(data.open){
             selectTab(selectedTab)
         }
-        e.stopPropagation()
     }
 }, true)

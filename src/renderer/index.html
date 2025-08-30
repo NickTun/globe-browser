@@ -14,16 +14,15 @@
     <title>Globe</title>
   </head>
   <body class="outside">
-    <div class="header outside">
+    <div class="menu outside">
+      <form id="url-wrapper" class="url-wrapper outside">
+        <input type="text" class="url" name="url" id="url" >
+      </form>
+      <div id="new-tab" class="new-tab" tabindex="0">+</div>
       <div id="tabs-container" class="tabs-container" data-offset="-1">
-        <!-- <div id="tab-splitter" class="tab-splitter"></div> -->
 
       </div>
-      <div id="new-tab" class="new-tab" tabindex="0">+</div>
     </div>
-    <form id="url-wrapper" class="url-wrapper outside">
-      <input type="text" class="url" name="url" id="url" >
-    </form>
     <div class="content outside"></div>
     <script src="src/renderer.ts" type="module"></script>
   </body>

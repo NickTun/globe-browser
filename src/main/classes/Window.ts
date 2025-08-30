@@ -1,4 +1,4 @@
-import { BaseWindow, WebContentsView, Menu } from 'electron/main'
+import { BaseWindow, WebContentsView, Menu, screen } from 'electron/main'
 import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
 import WindowTabInfo from '../../types/WindowTabInfo'
@@ -6,32 +6,43 @@ import icon from '../../../build/icon.png?asset'
 
 const OFFSET = {
     border: 4,
-    y: 68,
+    y: 0,
 }
 
-const RADIUS = 10
+const RADIUS = 8
+const MENU_WIDTH = 180
+
 export default class Window {
     id: number
     activeTab: number
     viewStorage: Array<WebContentsView>
     win: BaseWindow
     view: WebContentsView
-    constructor(id: number, data: WindowTabInfo | null) {
+    tabListState: boolean
+    tabListOpen: boolean
+    constructor(id: number, data: WindowTabInfo | null, tabListState: boolean = false) {
         this.id = id
         this.activeTab = 0
         this.viewStorage = []
+        this.tabListOpen = false
+        this.tabListState = tabListState
 
         this.win = new BaseWindow({
             titleBarStyle: 'hiddenInset',
             ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
             ...(process.platform === 'linux' ? { icon } : {}),
+            // transparent: true,
+            // backgroundColor: "#00000000"
         })
+        process.platform === 'darwin' && this.win.setVibrancy("under-window")
 
         this.view = new WebContentsView({
             webPreferences: {
                 preload: join(__dirname, '../preload/index.js'),
             }
         })
+
+        this.view.setBackgroundColor('#00000000');
 
         this.win.contentView.addChildView(this.view)
         if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -56,6 +67,14 @@ export default class Window {
         this.win.on('closed', () => {
             this.view.webContents.close()
         })
+
+        this.win.on('focus', () => {
+            const mos = setInterval(() => {
+                this.handleMouseMovement()
+            }, 50)
+
+            this.win.on('blur', () => setTimeout(() =>clearInterval(mos), 50))
+        })
     }
 
     handleTitleChange(tab: WebContentsView): void {
@@ -75,6 +94,36 @@ export default class Window {
         })
     }
 
+    handleMouseMovement(): void {
+        const mouse = screen.getCursorScreenPoint()
+        const x = mouse.x - this.win.getBounds().x
+        if(this.tabListOpen) {
+            if(x > MENU_WIDTH) {
+                this.view.setBounds({
+                    x: 0,
+                    y: 0,
+                    width: 4,
+                    height: this.win.getBounds().height
+                })
+                this.view.webContents.send('menu-state-change', false)
+                this.win.setWindowButtonVisibility(false)
+                this.tabListOpen = false
+            }
+        } else {
+            if(x <= 4) {
+                this.view.setBounds({
+                    x: 0,
+                    y: 0,
+                    width: MENU_WIDTH,
+                    height: this.win.getBounds().height
+                })
+                this.view.webContents.send('menu-state-change', true)
+                this.win.setWindowButtonVisibility(true)
+                this.tabListOpen = true
+            }
+        }
+    }
+
     refreshTabViews(prevActive: number, active: number): void {
         if(this.viewStorage[prevActive]) this.viewStorage[prevActive].setVisible(false)
         if(this.viewStorage[active]) this.viewStorage[active].setVisible(true)
@@ -83,7 +132,7 @@ export default class Window {
     addNewTab(): number {
         const webView = new WebContentsView()
         webView.setBorderRadius(RADIUS)
-        this.win.contentView.addChildView(webView)
+        this.win.contentView.addChildView(webView, 0)
 
         webView.webContents.addListener('context-menu', () => {
             this.drawMenu(webView)

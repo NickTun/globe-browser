@@ -16,6 +16,7 @@ export interface IElectronAPI {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onWindowCleanup: (callback: () => void) => Promise<void>,
   onUrlChange: (callback: (url: string, tab_id: number) => void) => Promise<void>,
+  onMenuStateChange: (callback: (state: boolean) => void) => Promise<void>
 }
 
 declare global {
