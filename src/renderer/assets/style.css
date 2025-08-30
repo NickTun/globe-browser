@@ -5,18 +5,23 @@
 body {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-content: center;
     margin: 0;
     /* background: dimgray; */
     height: 100vh;
+    width: 180px;
 }
 
 .menu {
     position: relative;
-    width: 180px;
-    height: 100%;
+    flex-grow: 1;
     display: flex;
+    margin: 4px;
+    border-radius: 8px;
     flex-direction: column;
-    background: #ff000033;
+    background: #2f0000;
+    border: 1px solid #ffffff24;
 }
 
 .tabs-container {

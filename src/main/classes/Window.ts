@@ -5,7 +5,7 @@ import WindowTabInfo from '../../types/WindowTabInfo'
 import icon from '../../../build/icon.png?asset'
 
 const OFFSET = {
-    border: 4,
+    border: 8,
     y: 0,
 }
 
@@ -20,12 +20,16 @@ export default class Window {
     view: WebContentsView
     tabListState: boolean
     tabListOpen: boolean
+    webViewOpen: boolean
+    intervalsPool: Set<ReturnType<typeof setInterval>>
     constructor(id: number, data: WindowTabInfo | null, tabListState: boolean = false) {
         this.id = id
         this.activeTab = 0
         this.viewStorage = []
         this.tabListOpen = false
+        this.webViewOpen = false
         this.tabListState = tabListState
+        this.intervalsPool = new Set()
 
         this.win = new BaseWindow({
             titleBarStyle: 'hiddenInset',
@@ -69,11 +73,17 @@ export default class Window {
         })
 
         this.win.on('focus', () => {
-            const mos = setInterval(() => {
+            this.intervalsPool.add(setInterval(() => {
                 this.handleMouseMovement()
-            }, 50)
+            }, 50));
 
-            this.win.on('blur', () => setTimeout(() =>clearInterval(mos), 50))
+            this.win.on('blur', () => setTimeout(() => this.clearIntervals(), 50))
+        })
+    }
+
+    clearIntervals(): void {
+        this.intervalsPool.forEach((interval) => {
+            clearInterval(interval)
         })
     }
 
@@ -97,36 +107,38 @@ export default class Window {
     handleMouseMovement(): void {
         const mouse = screen.getCursorScreenPoint()
         const x = mouse.x - this.win.getBounds().x
+
         if(this.tabListOpen) {
-            if(x > MENU_WIDTH) {
+            if(x > MENU_WIDTH && this.webViewOpen) {
                 this.view.setBounds({
                     x: 0,
                     y: 0,
-                    width: 4,
+                    width: OFFSET.border,
                     height: this.win.getBounds().height
                 })
                 this.view.webContents.send('menu-state-change', false)
                 this.win.setWindowButtonVisibility(false)
                 this.tabListOpen = false
             }
-        } else {
-            if(x <= 4) {
-                this.view.setBounds({
-                    x: 0,
-                    y: 0,
-                    width: MENU_WIDTH,
-                    height: this.win.getBounds().height
-                })
-                this.view.webContents.send('menu-state-change', true)
-                this.win.setWindowButtonVisibility(true)
-                this.tabListOpen = true
-            }
+        } else if(!this.webViewOpen || x <= OFFSET.border) {
+            this.view.setBounds({
+                x: 0,
+                y: 0,
+                width: MENU_WIDTH,
+                height: this.win.getBounds().height
+            })
+            this.view.webContents.send('menu-state-change', true)
+            this.win.setWindowButtonVisibility(true)
+            this.tabListOpen = true
         }
     }
 
     refreshTabViews(prevActive: number, active: number): void {
         if(this.viewStorage[prevActive]) this.viewStorage[prevActive].setVisible(false)
-        if(this.viewStorage[active]) this.viewStorage[active].setVisible(true)
+        if(this.viewStorage[active]){ 
+            this.viewStorage[active].setVisible(true)
+            this.webViewOpen = true
+        } else this.webViewOpen = false
     }
 
     addNewTab(): number {
@@ -182,6 +194,7 @@ export default class Window {
         this.viewStorage.forEach((webView) => {
             webView.webContents.close()
         })
+        this.clearIntervals()
         this.win.close()
     }
 
@@ -196,7 +209,7 @@ export default class Window {
     }
 
     pushTab(tab): void {
-        this.win.contentView.addChildView(tab)
+        this.win.contentView.addChildView(tab, 0)
         this.Resize(this.win.getBounds(), tab, OFFSET)
         this.viewStorage.push(tab)
         tab.webContents.on('page-title-updated', () => this.handleTitleChange(tab))
