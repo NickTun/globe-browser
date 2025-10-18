@@ -11,6 +11,10 @@ body {
     /* background: dimgray; */
     height: 100vh;
     width: 180px;
+    transition-property: margin-left;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    overflow: hidden;
 }
 
 .menu {
@@ -99,7 +103,8 @@ body {
 }
 
 .hidden {
-    display: none;
+    /* display: none; */
+    margin-left: -200px;;
 }
 .tab-splitter-open {
     /* width: 120px; */

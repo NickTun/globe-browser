@@ -18,17 +18,17 @@ export default class Window {
     viewStorage: Array<WebContentsView>
     win: BaseWindow
     view: WebContentsView
-    tabListState: boolean
+    tabListClosingState: boolean
     tabListOpen: boolean
     webViewOpen: boolean
     intervalsPool: Set<ReturnType<typeof setInterval>>
-    constructor(id: number, data: WindowTabInfo | null, tabListState: boolean = false) {
+    constructor(id: number, data: WindowTabInfo | null, tabListClosingState: boolean = false) {
         this.id = id
         this.activeTab = 0
         this.viewStorage = []
         this.tabListOpen = false
         this.webViewOpen = false
-        this.tabListState = tabListState
+        this.tabListClosingState = tabListClosingState
         this.intervalsPool = new Set()
 
         this.win = new BaseWindow({
@@ -55,13 +55,13 @@ export default class Window {
             this.view.webContents.loadFile(join(__dirname, '../renderer/index.html'))
         }
         this.Resize(this.win.getBounds(), this.view)
-        // this.view.webContents.openDevTools({mode: 'detach'})
+        this.view.webContents.openDevTools({mode: 'detach'})
 
         this.win.on('resize', () => {
             this.viewStorage.forEach((webView) => {
                 this.Resize(this.win.getBounds(), webView, OFFSET)
             })
-            this.Resize(this.win.getBounds(), this.view)
+            this.Resize({ width: MENU_WIDTH, height: this.win.getBounds().height}, this.view)
         })
 
         this.view.webContents.on('did-finish-load', () => {
@@ -69,6 +69,7 @@ export default class Window {
         })
 
         this.win.on('closed', () => {
+            this.clearIntervals()
             this.view.webContents.close()
         })
 
@@ -105,31 +106,30 @@ export default class Window {
     }
 
     handleMouseMovement(): void {
-        const mouse = screen.getCursorScreenPoint()
-        const x = mouse.x - this.win.getBounds().x
+        if(!this.tabListClosingState) {
+            const mouse = screen.getCursorScreenPoint()
+            const x = mouse.x - this.win.getBounds().x
 
-        if(this.tabListOpen) {
-            if(x > MENU_WIDTH && this.webViewOpen) {
-                this.view.setBounds({
-                    x: 0,
-                    y: 0,
-                    width: OFFSET.border,
-                    height: this.win.getBounds().height
-                })
-                this.view.webContents.send('menu-state-change', false)
-                this.win.setWindowButtonVisibility(false)
-                this.tabListOpen = false
+            if(this.tabListOpen) {
+                if(x > MENU_WIDTH && this.webViewOpen) {
+                    this.tabListClosingState = true
+                    setTimeout(() => {
+                        // this.Resize({ width: OFFSET.border, height: this.win.getBounds().height}, this.view)
+                        this.view.setVisible(false)
+                        this.tabListClosingState = false
+                    }, 150)
+                    
+                    this.view.webContents.send('menu-state-change', false)
+                    this.win.setWindowButtonVisibility(false)
+                    this.tabListOpen = false
+                }
+            } else if(!this.webViewOpen || x <= OFFSET.border) {
+                // this.Resize({ width: MENU_WIDTH, height: this.win.getBounds().height}, this.view)
+                this.view.setVisible(true)
+                this.view.webContents.send('menu-state-change', true)
+                this.win.setWindowButtonVisibility(true)
+                this.tabListOpen = true
             }
-        } else if(!this.webViewOpen || x <= OFFSET.border) {
-            this.view.setBounds({
-                x: 0,
-                y: 0,
-                width: MENU_WIDTH,
-                height: this.win.getBounds().height
-            })
-            this.view.webContents.send('menu-state-change', true)
-            this.win.setWindowButtonVisibility(true)
-            this.tabListOpen = true
         }
     }
 
